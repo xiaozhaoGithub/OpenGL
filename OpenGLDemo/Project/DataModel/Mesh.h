@@ -20,7 +20,6 @@ struct Texture
 	std::string name;
 };
 
-
 /**
  * @brief 模型绘制，以网格为单位进行绘制，一个网格包含多个顶点、索引、纹理数据
  */
@@ -28,7 +27,6 @@ class Mesh
 {
 public:
 	Mesh(const std::vector<Vertex>& vertexs, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
-	virtual ~Mesh();
 
 	void setupMesh();
 	void draw(std::shared_ptr<AbstractShader> shader);

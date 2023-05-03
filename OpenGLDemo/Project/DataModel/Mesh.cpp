@@ -11,10 +11,6 @@ Mesh::Mesh(const std::vector<Vertex>& vertexs, const std::vector<unsigned int>& 
 	setupMesh();
 }
 
-Mesh::~Mesh()
-{
-}
-
 void Mesh::setupMesh()
 {
 	glGenVertexArrays(1, &VAO);

@@ -12,6 +12,9 @@
 #include "Shader.h"
 #include "Mesh.h"
 
+/**
+ * @brief 通用模型加载
+ */
 class Model
 {
 public:

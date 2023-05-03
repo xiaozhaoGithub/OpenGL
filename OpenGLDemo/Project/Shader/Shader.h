@@ -5,10 +5,13 @@
 
 #include "gtc/type_ptr.hpp"
 
+/**
+ * @brief 着色器构建 
+ */
 class AbstractShader
 {
 public:
-	AbstractShader(const char* vertexPath, const char* fragmentPath) : m_id(0) {}
+	AbstractShader(const char* vertexPath, const char* fragmentPath);
 	virtual ~AbstractShader();
 
 	virtual void use() = 0;
@@ -31,7 +34,9 @@ protected:
 	unsigned int m_id;
 };
 
-// 编译顶点着色器和片段着色器（几何着色器可选）
+/**
+ * @brief 编译顶点着色器和片段着色器（几何着色器未实现）
+ */
 class SimpleShader : public AbstractShader
 {
 public:

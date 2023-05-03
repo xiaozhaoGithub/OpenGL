@@ -7,58 +7,7 @@
 
 #include "glad/glad.h"
 
-void AbstractShader::setBool(const std::string& name, bool value)
-{
-	glUniform1i(glGetUniformLocation(m_id, name.c_str()), (int)value);
-}
-
-void AbstractShader::setInt(const std::string& name, int value)
-{
-	glUniform1i(glGetUniformLocation(m_id, name.c_str()), value);
-}
-
-void AbstractShader::setFloat(const std::string& name, float value)
-{
-	glUniform1f(glGetUniformLocation(m_id, name.c_str()), value);
-}
-
-void AbstractShader::setFloat(const std::string& name, float v1, float v2, float v3, float v4)
-{
-	glUniform4f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3, v4);
-}
-
-void AbstractShader::setVec(const std::string& name, float v1, float v2, float v3)
-{
-	glUniform3f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3);
-}
-
-void AbstractShader::setVec(const std::string & name, float v1, float v2, float v3, float v4)
-{
-	glUniform4f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3, v4);
-}
-
-void AbstractShader::setVec(const std::string& name, glm::vec3 vec)
-{
-	setVec(name, vec.x, vec.y, vec.z);
-}
-
-void AbstractShader::setVec(const std::string& name, glm::vec4 vec)
-{
-	setVec(name, vec.x, vec.y, vec.z, vec.w);
-}
-
-void AbstractShader::setMatrix(const std::string& name, float* value)
-{
-	glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, value);
-}
-
-AbstractShader::~AbstractShader()
-{
-	glDeleteShader(m_id);
-}
-
-SimpleShader::SimpleShader(const char* vertexPath, const char* fragmentPath)
-	: AbstractShader(vertexPath, fragmentPath)
+AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
 {
 	std::fstream vertexStream(vertexPath, std::ios_base::in);
 
@@ -67,8 +16,6 @@ SimpleShader::SimpleShader(const char* vertexPath, const char* fragmentPath)
 	vertexStream.close();
 
 	// compile vertex shader
-
-	//const char* vertexSource = strStream.str().c_str();
 	std::string tmpSouce = strVertexStream.str(); // 必须先转成std::string类型, 再c_str, 否则乱码
 	const char* vertexSource = tmpSouce.c_str();
 
@@ -116,6 +63,61 @@ SimpleShader::SimpleShader(const char* vertexPath, const char* fragmentPath)
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+}
+
+AbstractShader::~AbstractShader()
+{
+	glDeleteShader(m_id);
+}
+
+void AbstractShader::setBool(const std::string& name, bool value)
+{
+	glUniform1i(glGetUniformLocation(m_id, name.c_str()), (int)value);
+}
+
+void AbstractShader::setInt(const std::string& name, int value)
+{
+	glUniform1i(glGetUniformLocation(m_id, name.c_str()), value);
+}
+
+void AbstractShader::setFloat(const std::string& name, float value)
+{
+	glUniform1f(glGetUniformLocation(m_id, name.c_str()), value);
+}
+
+void AbstractShader::setFloat(const std::string& name, float v1, float v2, float v3, float v4)
+{
+	glUniform4f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3, v4);
+}
+
+void AbstractShader::setVec(const std::string& name, float v1, float v2, float v3)
+{
+	glUniform3f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3);
+}
+
+void AbstractShader::setVec(const std::string & name, float v1, float v2, float v3, float v4)
+{
+	glUniform4f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3, v4);
+}
+
+void AbstractShader::setVec(const std::string& name, glm::vec3 vec)
+{
+	setVec(name, vec.x, vec.y, vec.z);
+}
+
+void AbstractShader::setVec(const std::string& name, glm::vec4 vec)
+{
+	setVec(name, vec.x, vec.y, vec.z, vec.w);
+}
+
+void AbstractShader::setMatrix(const std::string& name, float* value)
+{
+	glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, value);
+}
+
+SimpleShader::SimpleShader(const char* vertexPath, const char* fragmentPath)
+	: AbstractShader(vertexPath, fragmentPath)
+{
 }
 
 void SimpleShader::use()

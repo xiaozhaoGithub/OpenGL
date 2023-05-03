@@ -8,14 +8,18 @@
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
 
+#include "Singleton.h"
+
 class CameraWrapper
 {
+	SINGLETON_DECLARE(CameraWrapper)
 public:
 	enum Mode {
 		M_FREE,
 		M_GROUND
 	};
 
+	CameraWrapper();
 	CameraWrapper(glm::vec3 eye, glm::vec3 center, glm::vec3 up);
 	~CameraWrapper() {}
 
@@ -65,6 +69,11 @@ private:
 	// 摄像机的速度都会相应平衡，这样每个用户的体验就都一样了。
 	float m_cameraSpeed;
 };
+
+inline CameraWrapper::CameraWrapper()
+	: CameraWrapper(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+{
+}
 
 inline CameraWrapper::CameraWrapper(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
 	: m_firstMouse(true)

@@ -1,5 +1,5 @@
-#ifndef SHADEREXERCICESTATE_H_
-#define SHADEREXERCICESTATE_H_
+#ifndef EXERCICESTATE_H_
+#define EXERCICESTATE_H_
 
 #include <memory>
 #include <list>
@@ -17,53 +17,29 @@
 #include "CameraWrapper.h"
 #include "Model.h"
 
-class StateContext;
+/**
+ * @brief 练习状态，即不同阶段的demo绘制
+ */
 class AbstractExerciceState
 {
 public:
-	AbstractExerciceState() { ; }
+	AbstractExerciceState() {}
 	virtual ~AbstractExerciceState() {}
 
-	virtual void use(StateContext*) {}; // do action
+	virtual void draw() = 0; // do action
 
 	void setFloat(const std::string& name, float value) { m_shader->setFloat(name, value); }
 	void setMatrix(const std::string& name, float* value) { m_shader->setMatrix(name, value); }
 
 protected:
-	bool match(const std::list<int>& keyList1st, const std::list<int>& keyList2nd);
-
-protected:
 	std::shared_ptr<AbstractShader> m_shader;
 };
 
-// state pattern
-class StateContext
+class AbstractTriangleExerciceState : public AbstractExerciceState
 {
 public:
-	StateContext();
-	virtual ~StateContext() {}
-
-	void use();
-
-	void setState(std::unique_ptr<class AbstractExerciceState> state) { m_state = std::move(state); }
-	void setFloat(const std::string& name, float value) { m_state->setFloat(name, value); }
-	void setMatrix(const std::string& name, float* value) { m_state->setMatrix(name, value); }
-
-	void setPressKey(int key);
-	int pressKey() { return m_presskey; }
-
-	void setPressKeyList(const std::list<int>& keyList);
-	const std::list<int>& pressKeyList() { return m_presskeyList; }
-
-	void setVao(std::shared_ptr<AbstractVAO> vao) { m_vao = vao; }
-	std::shared_ptr<AbstractVAO> vao() { return m_vao; }
-
-private:
-	std::unique_ptr<AbstractExerciceState> m_state;
-
-	int m_presskey = 0;
-	std::list<int> m_presskeyList;
-	std::shared_ptr<AbstractVAO> m_vao;
+	AbstractTriangleExerciceState() : AbstractExerciceState() {}
+	virtual ~AbstractTriangleExerciceState() {}
 };
 
 class AbstractTextureExerciceState : public AbstractExerciceState
@@ -87,71 +63,162 @@ public:
 	virtual ~AbstractModelExerciceState() {}
 };
 
-
-class TextureExerciceStateOther : public AbstractTextureExerciceState
+class ClearExerciceState : public AbstractExerciceState
 {
 public:
-	TextureExerciceStateOther() = default;
+	ClearExerciceState();
+	void draw() override;
 
-	void use(StateContext* context) override;
+private:
+	unsigned int m_specialTriangleVAO;
+};
+
+class SpecialTriangleExerciceState : public AbstractTriangleExerciceState
+{
+public:
+	SpecialTriangleExerciceState();
+	void draw() override;
+
+private:
+	unsigned int m_specialTriangleVAO;
+};
+
+class AdjacentTriangleExerciceState : public AbstractTriangleExerciceState
+{
+public:
+	AdjacentTriangleExerciceState();
+	void draw() override;
+
+private:
+	unsigned int m_adjacentTriangleVAO;
+};
+
+class AdjacentTriangle1ExerciceState : public AbstractTriangleExerciceState
+{
+public:
+	AdjacentTriangle1ExerciceState();
+	void draw() override;
+
+private:
+	unsigned int m_adjacentTriangle1VAO;
+	unsigned int m_adjacentTriangle2VAO;
+
+	std::shared_ptr<AbstractShader>  m_yellowShaderProgram;
+};
+
+class FlipTriangleExerciceState : public AbstractTriangleExerciceState
+{
+public:
+	FlipTriangleExerciceState();
+	void draw() override;
+
+private:
+	unsigned int m_normalTriangleVAO;
+};
+
+class RichTriangleExerciceState : public AbstractTriangleExerciceState
+{
+public:
+	RichTriangleExerciceState();
+	void draw() override;
+
+private:
+	unsigned int m_richTriangleVAO;
+	std::shared_ptr<AbstractShader>  m_withColorShaderProgram;
+};
+
+class RectExerciceState : public AbstractExerciceState
+{
+public:
+	RectExerciceState();
+	void draw() override;
+
+protected:
+	unsigned int m_rectVAO;
+};
+
+class LineRectExerciceState : public RectExerciceState
+{
+public:
+	LineRectExerciceState();
+	void draw() override;
 };
 
 class TextureExerciceState : public AbstractTextureExerciceState
 {
 public:
 	TextureExerciceState();
+	void draw() override;
 
-	void use(StateContext* context) override;
+private:
+	std::shared_ptr<AbstractVAO> m_textureTriangleVAO;
 };
 
-class TextureExerciceStateMix : public AbstractTextureExerciceState
+class TextureMixExerciceState : public AbstractTextureExerciceState
 {
 public:
-	TextureExerciceStateMix();
+	TextureMixExerciceState();
+	void draw() override;
 
-	void use(StateContext* context) override;
+private:
+	std::shared_ptr<AbstractVAO> m_textureUnitTriangleVAO;
 };
 
-class TextureExerciceState1 : public AbstractTextureExerciceState
+class TextureExercice1State : public AbstractTextureExerciceState
 {
 public:
-	TextureExerciceState1();
-	void use(StateContext* context) override;
+	TextureExercice1State();
+	void draw() override;
+
+private:
+	std::shared_ptr<AbstractVAO> m_textureUnitTriangleVAO;
 };
 
-class TextureExerciceState4 : public AbstractTextureExerciceState
+class TextureExercice4State : public AbstractTextureExerciceState
 {
 public:
-	TextureExerciceState4();
-	void use(StateContext* context) override;
+	TextureExercice4State();
+	void draw() override;
+
+private:
+	std::shared_ptr<AbstractVAO> m_textureUnitTriangleVAO;
+	float m_opacity;
 };
 
 class TransformTextureExerciceState : public AbstractTextureExerciceState
 {
 public:
 	TransformTextureExerciceState();
-	void use(StateContext* context) override;
+	void draw() override;
+
+private:
+	std::shared_ptr<AbstractVAO> m_textureTransformTriangleVAO;
 };
 
-class TextureExerciceState3D : public AbstractTextureExerciceState
+class Fake3DTextureExerciceState : public AbstractTextureExerciceState
 {
 public:
-	TextureExerciceState3D();
-	void use(StateContext* context) override;
+	Fake3DTextureExerciceState();
+	void draw() override;
+
+private:
+	std::shared_ptr<AbstractVAO> m_textureFake3DTriangleVAO;
 };
 
-class TextureExerciceStateCube : public AbstractTextureExerciceState
+class CubeTextureExerciceState : public AbstractTextureExerciceState
 {
 public:
-	TextureExerciceStateCube();
-	void use(StateContext* context) override;
+	CubeTextureExerciceState();	
+	void draw() override;
+private:
+	std::shared_ptr<AbstractVAO> m_texture3DTriangleVAO;
 }; 
 
 class LightSceneExerciceState : public AbstractLightExerciceState
 {
 public:
 	LightSceneExerciceState();
-	void use(StateContext* context) override;
+	void draw() override;
 
 private:
 	std::shared_ptr<AbstractShader> m_lightShader;
@@ -169,7 +236,7 @@ class LightMapExerciceState : public AbstractLightExerciceState
 {
 public:
 	LightMapExerciceState();
-	void use(StateContext* context) override;
+	void draw() override;
 
 private:
 	std::shared_ptr<AbstractShader> m_lightShader;
@@ -187,7 +254,7 @@ class LightSourceExerciceState : public AbstractLightExerciceState
 {
 public:
 	LightSourceExerciceState();
-	void use(StateContext* context) override;
+	void draw() override;
 
 private:
 	std::shared_ptr<AbstractShader> m_lightShader;
@@ -198,14 +265,13 @@ private:
 
 	glm::vec3 m_lightPos;
 	glm::vec4 m_lightColor;
-	//glm::vec4 m_targetColor; 纹理记载图片，无目标颜色
 };
 
 class FlashLightSourceExerciceState : public AbstractLightExerciceState
 {
 public:
 	FlashLightSourceExerciceState();
-	void use(StateContext* context) override;
+	void draw() override;
 
 private:
 	std::shared_ptr<AbstractShader> m_lightShader;
@@ -216,15 +282,13 @@ private:
 
 	glm::vec3 m_lightPos;
 	glm::vec4 m_lightColor;
-	//glm::vec4 m_targetColor; 纹理记载图片，无目标颜色
 };
 
 class MultipleLightSourceExerciceState : public AbstractLightExerciceState
 {
 public:
 	MultipleLightSourceExerciceState();
-	~MultipleLightSourceExerciceState();
-	void use(StateContext* context) override;
+	void draw() override;
 
 private:
 	std::shared_ptr<AbstractShader> m_lightShader;
@@ -235,16 +299,13 @@ private:
 
 	glm::vec3 m_lightPos;
 	glm::vec4 m_lightColor;
-
-	glm::vec3 *pointLightPositions;
-	glm::vec3 *pointLightColors;
 };
 
 class ModelExerciceState : public AbstractModelExerciceState
 {
 public:
 	ModelExerciceState();
-	void use(StateContext* context) override;
+	void draw() override;
 
 private:
 	std::unique_ptr<Model> m_model;

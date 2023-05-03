@@ -91,7 +91,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>DataModel;CommonFileSrc;third_lib\Assimp\include;third_lib\glm;Shader;third_lib\stb;third_lib\GLAD\include;third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>ExerciceState;DataModel;CommonFileSrc;third_lib\Assimp\include;third_lib\glm;Shader;third_lib\stb;third_lib\GLAD\include;third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,13 +137,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CommonFileSrc\CommonDataDef.cpp" />
+    <ClCompile Include="ExerciceState\ExerciceState.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="DataModel\Mesh.cpp" />
     <ClCompile Include="DataModel\Model.cpp" />
     <ClCompile Include="RenderLoop.cpp" />
     <ClCompile Include="Shader\Shader.cpp" />
-    <ClCompile Include="Shader\ShaderExerciceState.cpp" />
     <ClCompile Include="Shader\ShaderFactory.cpp" />
+    <ClCompile Include="ExerciceState\StateSourceFactory.cpp" />
     <ClCompile Include="third_lib\GLAD\src\glad.c" />
     <ClCompile Include="third_lib\stb\stb_image.cpp" />
     <ClCompile Include="DataModel\VAOFactory.cpp" />
@@ -151,12 +153,15 @@
   <ItemGroup>
     <ClInclude Include="CommonFileSrc\CameraWrapper.h" />
     <ClInclude Include="CommonFileSrc\LogWrapper.h" />
+    <ClInclude Include="CommonFileSrc\Singleton.h" />
     <ClInclude Include="DataModel\Mesh.h" />
     <ClInclude Include="DataModel\Model.h" />
+    <ClInclude Include="ExerciceState\ExerciceState.h" />
+    <ClInclude Include="CommonFileSrc\CommonDataDef.h" />
     <ClInclude Include="RenderLoop.h" />
     <ClInclude Include="Shader\Shader.h" />
-    <ClInclude Include="Shader\ShaderExerciceState.h" />
     <ClInclude Include="Shader\ShaderFactory.h" />
+    <ClInclude Include="ExerciceState\StateSourceFactory.h" />
     <ClInclude Include="third_lib\stb\stb_image.h" />
     <ClInclude Include="DataModel\VAOFactory.h" />
   </ItemGroup>

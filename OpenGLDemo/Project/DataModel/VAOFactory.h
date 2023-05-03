@@ -5,6 +5,7 @@
 #include <map>
 
 #include "Shader.h"
+#include "Singleton.h"
 
 class AbstractVAO
 {
@@ -63,6 +64,7 @@ protected:
 
 class TriangleVAOFactory : public AbstractVAOFactory
 {
+	SINGLETON_DECLARE(TriangleVAOFactory)
 public:
 	TriangleVAOFactory() {}
 
