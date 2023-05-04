@@ -16,6 +16,7 @@ Model::Model(const std::string& path)
 	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 	if (!scene || !scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) {
 		std::cout << "Model loaded failed! error info: " << importer.GetErrorString() << std::endl;
+		return;
 	}
 
 	clock_t mid_time = clock();
