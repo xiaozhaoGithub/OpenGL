@@ -1,4 +1,4 @@
-#include "ExerciceState.h"
+﻿#include "ExerciceState.h"
 
 #include "ShaderFactory.h"
 #include "CommonDataDef.h"
@@ -847,7 +847,7 @@ ModelExerciceState::ModelExerciceState()
 	// directional light
 	m_targetShader->setVec("dirLight.direction", -0.2f, -1.0f, -0.3f);
 	m_targetShader->setVec("dirLight.ambient", 0.05f, 0.05f, 0.1f);
-	m_targetShader->setVec("dirLight.diffuse", 0.2f, 0.2f, 0.7);
+	m_targetShader->setVec("dirLight.diffuse", 0.2f, 0.2f, 0.7f);
 	m_targetShader->setVec("dirLight.specular", 0.7f, 0.7f, 0.7f);
 
 	// point light auto
@@ -861,7 +861,7 @@ ModelExerciceState::ModelExerciceState()
 
 	// point light 1
 	m_targetShader->setVec("pointLights[0].position", ESCD::pointLightPositions[0]);
-	m_targetShader->setVec("pointLights[0].ambient", ESCD::pointLightColors[0].x * 0.1, ESCD::pointLightColors[0].y * 0.1, ESCD::pointLightColors[0].z * 0.1);
+	m_targetShader->setVec("pointLights[0].ambient", ESCD::pointLightColors[0].x * 0.1f, ESCD::pointLightColors[0].y * 0.1f, ESCD::pointLightColors[0].z * 0.1f);
 	m_targetShader->setVec("pointLights[0].diffuse", ESCD::pointLightColors[0].x, ESCD::pointLightColors[0].y, ESCD::pointLightColors[0].z);
 	m_targetShader->setVec("pointLights[0].specular", ESCD::pointLightColors[0].x, ESCD::pointLightColors[0].y, ESCD::pointLightColors[0].z);
 	m_targetShader->setFloat("pointLights[0].constant", 1.0f);
@@ -870,7 +870,7 @@ ModelExerciceState::ModelExerciceState()
 
 	// point light 2
 	m_targetShader->setVec("pointLights[1].position", ESCD::pointLightPositions[1]);
-	m_targetShader->setVec("pointLights[1].ambient", ESCD::pointLightColors[1].x * 0.1, ESCD::pointLightColors[1].y * 0.1, ESCD::pointLightColors[1].z * 0.1);
+	m_targetShader->setVec("pointLights[1].ambient", ESCD::pointLightColors[1].x * 0.1f, ESCD::pointLightColors[1].y * 0.1f, ESCD::pointLightColors[1].z * 0.1f);
 	m_targetShader->setVec("pointLights[1].diffuse", ESCD::pointLightColors[1].x, ESCD::pointLightColors[1].y, ESCD::pointLightColors[1].z);
 	m_targetShader->setVec("pointLights[1].specular", ESCD::pointLightColors[1].x, ESCD::pointLightColors[1].y, ESCD::pointLightColors[1].z);
 	m_targetShader->setFloat("pointLights[1].constant", 1.0f);
@@ -878,7 +878,7 @@ ModelExerciceState::ModelExerciceState()
 	m_targetShader->setFloat("pointLights[1].quadratic", 0.032f);
 	// point light 3
 	m_targetShader->setVec("pointLights[2].position", ESCD::pointLightPositions[2]);
-	m_targetShader->setVec("pointLights[2].ambient", ESCD::pointLightColors[2].x * 0.1, ESCD::pointLightColors[2].y * 0.1, ESCD::pointLightColors[2].z * 0.1);
+	m_targetShader->setVec("pointLights[2].ambient", ESCD::pointLightColors[2].x * 0.1f, ESCD::pointLightColors[2].y * 0.1f, ESCD::pointLightColors[2].z * 0.1f);
 	m_targetShader->setVec("pointLights[2].diffuse", ESCD::pointLightColors[2].x, ESCD::pointLightColors[2].y, ESCD::pointLightColors[2].z);
 	m_targetShader->setVec("pointLights[2].specular", ESCD::pointLightColors[2].x, ESCD::pointLightColors[2].y, ESCD::pointLightColors[2].z);
 	m_targetShader->setFloat("pointLights[2].constant", 1.0f);
@@ -889,7 +889,7 @@ ModelExerciceState::ModelExerciceState()
 	m_targetShader->setVec("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
 	m_targetShader->setVec("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
 	m_targetShader->setVec("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-	m_targetShader->setVec("pointLights[3].ambient", ESCD::pointLightColors[3].x * 0.1, ESCD::pointLightColors[3].y * 0.1, ESCD::pointLightColors[3].z * 0.1);
+	m_targetShader->setVec("pointLights[3].ambient", ESCD::pointLightColors[3].x * 0.1f, ESCD::pointLightColors[3].y * 0.1f, ESCD::pointLightColors[3].z * 0.1f);
 	m_targetShader->setVec("pointLights[3].diffuse", ESCD::pointLightColors[3].x, ESCD::pointLightColors[3].y, ESCD::pointLightColors[3].z);
 	m_targetShader->setVec("pointLights[3].specular", ESCD::pointLightColors[3].x, ESCD::pointLightColors[3].y, ESCD::pointLightColors[3].z);
 	m_targetShader->setFloat("pointLights[3].constant", 1.0f);
@@ -920,7 +920,7 @@ ModelExerciceState::ModelExerciceState()
 	// directional light
 	m_modelShader->setVec("dirLight.direction", -0.2f, -1.0f, -0.3f);
 	m_modelShader->setVec("dirLight.ambient", 0.05f, 0.05f, 0.1f);
-	m_modelShader->setVec("dirLight.diffuse", 0.2f, 0.2f, 0.7);
+	m_modelShader->setVec("dirLight.diffuse", 0.2f, 0.2f, 0.7f);
 	m_modelShader->setVec("dirLight.specular", 0.7f, 0.7f, 0.7f);
 
 	// point light auto
@@ -934,7 +934,7 @@ ModelExerciceState::ModelExerciceState()
 
 	// point light 1
 	m_modelShader->setVec("pointLights[0].position", ESCD::pointLightPositions[0]);
-	m_modelShader->setVec("pointLights[0].ambient", ESCD::pointLightColors[0].x * 0.1, ESCD::pointLightColors[0].y * 0.1, ESCD::pointLightColors[0].z * 0.1);
+	m_modelShader->setVec("pointLights[0].ambient", ESCD::pointLightColors[0].x * 0.1f, ESCD::pointLightColors[0].y * 0.1f, ESCD::pointLightColors[0].z * 0.1f);
 	m_modelShader->setVec("pointLights[0].diffuse", ESCD::pointLightColors[0].x, ESCD::pointLightColors[0].y, ESCD::pointLightColors[0].z);
 	m_modelShader->setVec("pointLights[0].specular", ESCD::pointLightColors[0].x, ESCD::pointLightColors[0].y, ESCD::pointLightColors[0].z);
 	m_modelShader->setFloat("pointLights[0].constant", 1.0f);
@@ -943,7 +943,7 @@ ModelExerciceState::ModelExerciceState()
 
 	// point light 2
 	m_modelShader->setVec("pointLights[1].position", ESCD::pointLightPositions[1]);
-	m_modelShader->setVec("pointLights[1].ambient", ESCD::pointLightColors[1].x * 0.1, ESCD::pointLightColors[1].y * 0.1, ESCD::pointLightColors[1].z * 0.1);
+	m_modelShader->setVec("pointLights[1].ambient", ESCD::pointLightColors[1].x * 0.1f, ESCD::pointLightColors[1].y * 0.1f, ESCD::pointLightColors[1].z * 0.1f);
 	m_modelShader->setVec("pointLights[1].diffuse", ESCD::pointLightColors[1].x, ESCD::pointLightColors[1].y, ESCD::pointLightColors[1].z);
 	m_modelShader->setVec("pointLights[1].specular", ESCD::pointLightColors[1].x, ESCD::pointLightColors[1].y, ESCD::pointLightColors[1].z);
 	m_modelShader->setFloat("pointLights[1].constant", 1.0f);
@@ -951,7 +951,7 @@ ModelExerciceState::ModelExerciceState()
 	m_modelShader->setFloat("pointLights[1].quadratic", 0.032f);
 	// point light 3
 	m_modelShader->setVec("pointLights[2].position", ESCD::pointLightPositions[2]);
-	m_modelShader->setVec("pointLights[2].ambient", ESCD::pointLightColors[2].x * 0.1, ESCD::pointLightColors[2].y * 0.1, ESCD::pointLightColors[2].z * 0.1);
+	m_modelShader->setVec("pointLights[2].ambient", ESCD::pointLightColors[2].x * 0.1f, ESCD::pointLightColors[2].y * 0.1f, ESCD::pointLightColors[2].z * 0.1f);
 	m_modelShader->setVec("pointLights[2].diffuse", ESCD::pointLightColors[2].x, ESCD::pointLightColors[2].y, ESCD::pointLightColors[2].z);
 	m_modelShader->setVec("pointLights[2].specular", ESCD::pointLightColors[2].x, ESCD::pointLightColors[2].y, ESCD::pointLightColors[2].z);
 	m_modelShader->setFloat("pointLights[2].constant", 1.0f);
@@ -962,7 +962,7 @@ ModelExerciceState::ModelExerciceState()
 	m_modelShader->setVec("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
 	m_modelShader->setVec("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
 	m_modelShader->setVec("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-	m_modelShader->setVec("pointLights[3].ambient", ESCD::pointLightColors[3].x * 0.1, ESCD::pointLightColors[3].y * 0.1, ESCD::pointLightColors[3].z * 0.1);
+	m_modelShader->setVec("pointLights[3].ambient", ESCD::pointLightColors[3].x * 0.1f, ESCD::pointLightColors[3].y * 0.1f, ESCD::pointLightColors[3].z * 0.1f);
 	m_modelShader->setVec("pointLights[3].diffuse", ESCD::pointLightColors[3].x, ESCD::pointLightColors[3].y, ESCD::pointLightColors[3].z);
 	m_modelShader->setVec("pointLights[3].specular", ESCD::pointLightColors[3].x, ESCD::pointLightColors[3].y, ESCD::pointLightColors[3].z);
 	m_modelShader->setFloat("pointLights[3].constant", 1.0f);

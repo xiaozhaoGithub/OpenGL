@@ -71,6 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LibraryPath>E:\TestSpace\OpenGLDemo\OpenGLDemo\OpenGLDemo\third_lib\GLFW\bin;$(LibraryPath)</LibraryPath>
+    <OutDir>../ExeFile/Debug_64/</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

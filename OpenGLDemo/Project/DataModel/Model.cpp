@@ -32,14 +32,14 @@ Model::Model(const std::string& path)
 
 void Model::draw(std::shared_ptr<AbstractShader> shader)
 {
-	for (int i = 0; i < m_meshes.size(); i++) {
+	for (unsigned int i = 0; i < m_meshes.size(); i++) {
 		m_meshes[i].draw(shader);
 	}
 }
 
 void Model::processNode(aiNode* node, const aiScene* scene)
 {
-	for (int i = 0; i < node->mNumMeshes; i++) {
+	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 		// 结点mMeshes存网格索引，场景mMeshes存的是网格对象
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		Mesh meshed = processMesh(mesh, scene);
@@ -47,7 +47,7 @@ void Model::processNode(aiNode* node, const aiScene* scene)
 		m_meshes.push_back(meshed);
 	}
 
-	for (int i = 0; i < node->mNumChildren; i++) {
+	for (unsigned int i = 0; i < node->mNumChildren; i++) {
 		aiNode* cNode = node->mChildren[i];
 		processNode(cNode, scene);
 	}
@@ -59,7 +59,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 
-	for (int i = 0; i < mesh->mNumVertices; i++) {
+	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex vertex;
 		vertex.position.x = mesh->mVertices[i].x;
 		vertex.position.y = mesh->mVertices[i].y;
@@ -89,9 +89,9 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 	}
 
 	// 现在遍历每个网格的面(面是一个网格的图元，如三角形)并检索相应的顶点索引。
-	for (int i = 0; i < mesh->mNumFaces; i++) {
+	for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
 		aiFace face = mesh->mFaces[i];
-		for (int j = 0; j < face.mNumIndices; j++) {
+		for (unsigned int j = 0; j < face.mNumIndices; j++) {
 			indices.push_back(face.mIndices[j]);
 		}
 	} 
@@ -119,7 +119,7 @@ std::vector<Texture> Model::processMaterial(aiMaterial* material, aiTextureType 
 
 	// 一个材质可能存在多种纹理单元
 	unsigned int count = material->GetTextureCount(type);
-	for (int i = 0; i < count; i++) {
+	for (unsigned int i = 0; i < count; i++) {
 		aiString path;
 		material->GetTexture(type, i, &path);
 
