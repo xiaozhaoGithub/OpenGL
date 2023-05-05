@@ -17,7 +17,7 @@ void AbstractVAO::bindTexture()
 {
 	for (auto pair : m_indexTextureMap) {
 		glActiveTexture(GL_TEXTURE0 + pair.first);
-		glBindTexture(GL_TEXTURE0 + pair.first, pair.second);
+		glBindTexture(GL_TEXTURE_2D, pair.second);
 	}
 }
 

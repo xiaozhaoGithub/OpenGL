@@ -1,13 +1,13 @@
 #version 330 core
 
-#define POINT_LIGHT_SOUCE_SIZE 4
+#define POINT_LIGHT_SOURCE_SIZE 4
 
 struct Material 
 {
 	//vec3 ambient; //漫反射贴图，材质中，环境光照应与漫反射一致，此处删除该变量
-	sampler2D diffuse;// Note
-	sampler2D specular;// Note
-	sampler2D emission;// Note
+	sampler2D diffuse1;
+	sampler2D specular1;
+	sampler2D emission1;
 	float shininess;// 反光度越大，光源越小越亮
 };
 
@@ -56,12 +56,11 @@ uniform Material material;
 
 uniform DirectionLight dirLight;
 uniform PointLight pointLight;
-uniform PointLight pointLights[POINT_LIGHT_SOUCE_SIZE];
+uniform PointLight pointLights[POINT_LIGHT_SOURCE_SIZE];
 uniform SpotLight spotLight;
 
 uniform vec3 lightColor;
 uniform vec3 viewPos;
-uniform sampler2D texture_diffuse1;
 
 in vec3 FragPos;
 in vec3 normalVector;
@@ -72,19 +71,19 @@ out vec4 FragColor; // 片段着色器唯一输出，输出片段颜色
 vec3 calcDirectionLight(DirectionLight lightAttr, vec3 normal, vec3 viewDirection)
 {
 	// 环境光照分量
-	vec3 ambient = lightAttr.ambient * vec3(texture(material.diffuse, texturePos));// 不要忘记将环境光的材质颜色设置为漫反射材质颜色同样的值。
+	vec3 ambient = lightAttr.ambient * vec3(texture(material.diffuse1, texturePos));// 不要忘记将环境光的材质颜色设置为漫反射材质颜色同样的值。
 
 	// 漫反射分量
 	vec3 lightDirection = normalize(-lightAttr.direction); // 法向量方向是从物体表面垂直向外，此处方向目标到光源
 	
 	float diffuseFactor = max(dot(lightDirection, normal), 0.0);
-	vec3 diffuse = lightAttr.diffuse * (diffuseFactor * vec3(texture(material.diffuse, texturePos)));// 漫反射贴图
+	vec3 diffuse = lightAttr.diffuse * (diffuseFactor * vec3(texture(material.diffuse1, texturePos)));// 漫反射贴图
 
 	// 镜面光照分量
 	vec3 reflectDirection = reflect(-lightDirection, normal); // 第一个参数必须是光源到目标的方向
 	float specularFactor = pow(max(dot(viewDirection, reflectDirection), 0.0), material.shininess);
 	// 镜面高光的强度可以通过纹理图像每个像素的亮度来获取，个像素越「白」，乘积就会越大，物体的镜面光分量就会越亮
-	vec3 specular = lightAttr.specular * (specularFactor * vec3(texture(material.specular, texturePos)));// 镜面光照贴图
+	vec3 specular = lightAttr.specular * (specularFactor * vec3(texture(material.specular1, texturePos)));// 镜面光照贴图
 
 	vec3 ambientColor = lightColor * ambient;
 	vec3 diffuseColor = lightColor * diffuse;
@@ -96,22 +95,22 @@ vec3 calcDirectionLight(DirectionLight lightAttr, vec3 normal, vec3 viewDirectio
 vec3 calcPointLight(PointLight lightAttr, vec3 normal, vec3 viewDirection)
 {
 	// 环境光照分量
-	vec3 ambient = lightAttr.ambient * vec3(texture(material.diffuse, texturePos));// 不要忘记将环境光的材质颜色设置为漫反射材质颜色同样的值。
+	vec3 ambient = lightAttr.ambient * vec3(texture(material.diffuse1, texturePos));// 不要忘记将环境光的材质颜色设置为漫反射材质颜色同样的值。
 	
 	// 漫反射分量
 	vec3 lightDirection = normalize(lightAttr.position - FragPos); // 法向量方向是从物体表面垂直向外，此处方向目标到光源
 	
 	float diffuseFactor = max(dot(lightDirection, normal), 0.0);
-	vec3 diffuse = lightAttr.diffuse * (diffuseFactor * vec3(texture(material.diffuse, texturePos)));// 漫反射贴图
+	vec3 diffuse = lightAttr.diffuse * (diffuseFactor * vec3(texture(material.diffuse1, texturePos)));// 漫反射贴图
 
 	// 镜面光照分量
 	vec3 reflectDirection = reflect(-lightDirection, normal); // 第一个参数必须是光源到目标的方向
 	float specularFactor = pow(max(dot(viewDirection, reflectDirection), 0.0), material.shininess);
 	// 镜面高光的强度可以通过纹理图像每个像素的亮度来获取，个像素越「白」，乘积就会越大，物体的镜面光分量就会越亮
-	vec3 specular = lightAttr.specular * (specularFactor * vec3(texture(material.specular, texturePos)));// 镜面光照贴图
+	vec3 specular = lightAttr.specular * (specularFactor * vec3(texture(material.specular1, texturePos)));// 镜面光照贴图
 
 	// 放射光分量（如机器人眼睛、箱子的灯带）
-	vec3 emissionColor = texture(material.emission, texturePos).rgb; // 放射光贴图
+	vec3 emissionColor = texture(material.emission1, texturePos).rgb; // 放射光贴图
 	
 	// 衰减因子
 	float distance = length(lightAttr.position - FragPos);
@@ -132,19 +131,19 @@ vec3 calcPointLight(PointLight lightAttr, vec3 normal, vec3 viewDirection)
 vec3 calcSpotLight(SpotLight lightAttr, vec3 normal, vec3 viewDirection)
 {
 	// 环境光照分量
-	vec3 ambient = lightAttr.ambient * vec3(texture(material.diffuse, texturePos));// 不要忘记将环境光的材质颜色设置为漫反射材质颜色同样的值。
+	vec3 ambient = lightAttr.ambient * vec3(texture(material.diffuse1, texturePos));// 不要忘记将环境光的材质颜色设置为漫反射材质颜色同样的值。
 	
 	// 漫反射分量
 	vec3 lightDirection = normalize(lightAttr.position - FragPos); // 法向量方向是从物体表面垂直向外，此处方向目标到光源
 	
 	float diffuseFactor = max(dot(lightDirection, normal), 0.0);
-	vec3 diffuse = lightAttr.diffuse * (diffuseFactor * vec3(texture(material.diffuse, texturePos)));// 漫反射贴图
+	vec3 diffuse = lightAttr.diffuse * (diffuseFactor * vec3(texture(material.diffuse1, texturePos)));// 漫反射贴图
 
 	// 镜面光照分量
 	vec3 reflectDirection = reflect(-lightDirection, normal); // 第一个参数必须是光源到目标的方向
 	float specularFactor = pow(max(dot(viewDirection, reflectDirection), 0.0), material.shininess);
 	// 镜面高光的强度可以通过纹理图像每个像素的亮度来获取，个像素越「白」，乘积就会越大，物体的镜面光分量就会越亮
-	vec3 specular = lightAttr.specular * (specularFactor * vec3(texture(material.specular, texturePos)));// 镜面光照贴图
+	vec3 specular = lightAttr.specular * (specularFactor * vec3(texture(material.specular1, texturePos)));// 镜面光照贴图
 
 	// 衰减因子
 	float distance = length(lightAttr.position - FragPos);
@@ -191,7 +190,6 @@ void main()
 	result += calcSpotLight(spotLight, normal, viewDirection);
 	
 	FragColor = vec4(result, 1.0f);
-	
 	 // FragColor = texture(texture_diffuse1, texturePos);
 }	
 

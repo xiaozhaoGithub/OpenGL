@@ -88,7 +88,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 		vertexs.push_back(vertex);
 	}
 
-	// 现在遍历每个网格的面(面是一个网格的三角形)并检索相应的顶点索引。
+	// 现在遍历每个网格的面(面是一个网格的图元，如三角形)并检索相应的顶点索引。
 	for (int i = 0; i < mesh->mNumFaces; i++) {
 		aiFace face = mesh->mFaces[i];
 		for (int j = 0; j < face.mNumIndices; j++) {
@@ -131,7 +131,7 @@ std::vector<Texture> Model::processMaterial(aiMaterial* material, aiTextureType 
 		else {
 			Texture texture;
 			texture.id = textureFromFile(m_path, path.C_Str());
-			texture.name = name;
+			texture.type = name;
 			textures.push_back(texture);
 
 			m_textureLoadedMap[path.C_Str()] = texture;

@@ -46,17 +46,18 @@ void Mesh::draw(std::shared_ptr<AbstractShader> shader)
 
 	for (unsigned int i = 0; i < m_textures.size(); ++i) {
 		std::string textureName;
-		auto name = m_textures[i].name;
-		if (name == "diffuse") {
-			textureName = name + std::to_string(diffuseNum++);
+		auto type = m_textures[i].type;
+		if (type == "diffuse") {
+			textureName = type + std::to_string(diffuseNum++);
 		}
-		else if (name == "specular") {
-			textureName = name + std::to_string(specularNum++);
+		else if (type == "specular") {
+			textureName = type + std::to_string(specularNum++);
 		}
 
-		shader->setInt("material." + name, 3 + i);
+		std::string name = "material." + textureName;
+		shader->setInt(name, i);
 
-		glActiveTexture(GL_TEXTURE3 + i); //特别注意，纹理枚举需要根据实际情况考虑，若此设置为GL_TEXTURE0，若纹理对象非重刷新，则此处纹理替代
+		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
 	}
 	glActiveTexture(GL_TEXTURE0);
