@@ -1,14 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -19,164 +11,238 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{8C5E9A89-668F-4850-A815-E5D586FB9674}</ProjectGuid>
-    <RootNamespace>OpenGLDemo</RootNamespace>
+    <ProjectGuid>{E8797DB6-2A16-3758-8BC0-790152E008C1}</ProjectGuid>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>OpenGLDemo</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>E:\TestSpace\OpenGLDemo\OpenGLDemo\OpenGLDemo\third_lib\GLFW\bin;$(LibraryPath)</LibraryPath>
-    <OutDir>../ExeFile/Debug_64/</OutDir>
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <LocalDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project</LocalDebuggerWorkingDirectory>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\ExeFile\Debug_64\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">OpenGLDemo.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">OpenGLDemo</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <LocalDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project</LocalDebuggerWorkingDirectory>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\ExeFile\Release_64\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OpenGLDemo.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OpenGLDemo</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Model;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <ConformanceMode>true</ConformanceMode>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>ExerciceState;DataModel;CommonFileSrc;third_lib\Assimp\include;third_lib\glm;Shader;third_lib\stb;third_lib\GLAD\include;third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>glfw3.lib;assimp-vc141-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>third_lib\GLFW\lib;third_lib\Assimp\lib;$(LibraryPath)</AdditionalLibraryDirectories>
-      <OutputFile>../ExeFile/Debug_64/$(TargetName)$(TargetExt)</OutputFile>
-    </Link>
-    <PostBuildEvent>
-      <Command>PostBuild.bat</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>PostBuild.bat</Message>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
+      <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PostBuildEvent>
+      <Message>PostBuild_64.bat</Message>
+      <Command>setlocal
+cd E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project
+if %errorlevel% neq 0 goto :cmEnd
+E:
+if %errorlevel% neq 0 goto :cmEnd
+call PostBuild_64.bat
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>glfw3.lib;assimp-vc141-mtd.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/GLFW/lib;E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/GLFW/lib/$(Configuration);E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/Assimp/lib;E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/Assimp/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/build/Debug/OpenGLDemo.lib</ImportLibrary>
       <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/ExeFile/Debug_64/OpenGLDemo.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ConformanceMode>true</ConformanceMode>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SDLCheck>true</SDLCheck>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PostBuildEvent>
+      <Message>PostBuild_64.bat</Message>
+      <Command>setlocal
+cd E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project
+if %errorlevel% neq 0 goto :cmEnd
+E:
+if %errorlevel% neq 0 goto :cmEnd
+call PostBuild_64.bat
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>glfw3.lib;assimp-vc141-mtd.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/GLFW/lib;E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/GLFW/lib/$(Configuration);E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/Assimp/lib;E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/third_lib/Assimp/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/build/Release/OpenGLDemo.lib</ImportLibrary>
       <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/ExeFile/Release_64/OpenGLDemo.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CommonFileSrc\CommonDataDef.cpp" />
-    <ClCompile Include="ExerciceState\ExerciceState.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="DataModel\Mesh.cpp" />
-    <ClCompile Include="DataModel\Model.cpp" />
-    <ClCompile Include="RenderLoop.cpp" />
-    <ClCompile Include="Shader\Shader.cpp" />
-    <ClCompile Include="Shader\ShaderFactory.cpp" />
-    <ClCompile Include="ExerciceState\StateSourceFactory.cpp" />
-    <ClCompile Include="third_lib\GLAD\src\glad.c" />
-    <ClCompile Include="third_lib\stb\stb_image.cpp" />
-    <ClCompile Include="DataModel\VAOFactory.cpp" />
+    <CustomBuild Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SE:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project -BE:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/build --check-stamp-file E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeCInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeCXXInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeCommonLanguageInclude.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeLanguageInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeRCInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Compiler\MSVC-C.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Compiler\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows-MSVC-C.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\WindowsPaths.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeCCompiler.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeCXXCompiler.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeRCCompiler.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SE:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project -BE:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/build --check-stamp-file E:/WorkSpaceCode/GithubCode/OpenGL/OpenGLDemo/Project/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeCInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeCXXInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeCommonLanguageInclude.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeLanguageInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeRCInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Compiler\MSVC-C.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Compiler\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows-MSVC-C.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-3.21\Modules\Platform\WindowsPaths.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeCCompiler.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeCXXCompiler.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeRCCompiler.cmake;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\3.21.0\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CommonFileSrc\CameraWrapper.h" />
-    <ClInclude Include="CommonFileSrc\LogWrapper.h" />
-    <ClInclude Include="CommonFileSrc\Singleton.h" />
-    <ClInclude Include="DataModel\Mesh.h" />
-    <ClInclude Include="DataModel\Model.h" />
-    <ClInclude Include="ExerciceState\ExerciceState.h" />
-    <ClInclude Include="CommonFileSrc\CommonDataDef.h" />
-    <ClInclude Include="RenderLoop.h" />
-    <ClInclude Include="Shader\Shader.h" />
-    <ClInclude Include="Shader\ShaderFactory.h" />
-    <ClInclude Include="ExerciceState\StateSourceFactory.h" />
-    <ClInclude Include="third_lib\stb\stb_image.h" />
-    <ClInclude Include="DataModel\VAOFactory.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc\CameraWrapper.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc\CommonDataDef.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc\Singleton.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\Mesh.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\Model.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\VAOFactory.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\ExerciceState.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\StateSourceFactory.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\RenderLoop.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader\Shader.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader\ShaderFactory.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb\stb_image.h" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc\CommonDataDef.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\Mesh.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\Model.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\VAOFactory.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\ExerciceState.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\StateSourceFactory.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\main.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\RenderLoop.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader\Shader.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader\ShaderFactory.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\src\glad.c" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ShaderProgram\flip_shader.vs" />
-    <None Include="ShaderProgram\offset_shader.vs" />
-    <None Include="ShaderProgram\shader.fs" />
-    <None Include="ShaderProgram\shader.vs" />
-    <None Include="ShaderProgram\texture_shader.fs" />
-    <None Include="ShaderProgram\texture_shader.vs" />
-    <None Include="ShaderProgram\uniformTestShader.fs" />
-    <None Include="ShaderProgram\vertex_with_color_shader.fs" />
-    <None Include="ShaderProgram\vertex_with_color_shader.vs" />
-    <None Include="ShaderProgram\yellowShader.fs" />
+    <ProjectReference Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build\ZERO_CHECK.vcxproj">
+      <Project>{C8F2677A-B1F9-3C9C-A092-AAE4F46A9FB8}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
