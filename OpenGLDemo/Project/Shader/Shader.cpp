@@ -10,6 +10,9 @@
 AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
 {
 	std::fstream vertexStream(vertexPath, std::ios_base::in);
+	if (!vertexStream.is_open()) {
+		std::cout << "Open vertex shader file fail. path: " << vertexPath << std::endl;
+	}
 
 	std::stringstream strVertexStream;
 	strVertexStream << vertexStream.rdbuf();
@@ -35,6 +38,9 @@ AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
 
 	// compile fragment shader
 	std::fstream fragmentStream(fragmentPath, std::ios_base::in);
+	if (!fragmentStream.is_open()) {
+		std::cout << "Open fragment shader file fail. path: " << fragmentPath << std::endl;
+	}
 
 	std::stringstream strFragmentStream;
 	strFragmentStream << fragmentStream.rdbuf();
