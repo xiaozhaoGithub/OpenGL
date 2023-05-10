@@ -13,6 +13,8 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_planeVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO();
 	m_vegetationVAO = Singleton<TriangleVAOFactory>::instance()->createVegetationVAO();
 
+	m_depthTestShader = Singleton<ShaderFactory>::instance()->shaderProgram("depth_test_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/depth_test_shader.fs");
+
 	m_shader = Singleton<ShaderFactory>::instance()->shaderProgram("cube_texture_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/texture_shader.fs");
 	m_shader->use();
 	m_shader->setInt("sampler1", 0);
@@ -40,39 +42,65 @@ void AdvancedExerciceState::draw()
 	cameraWrapper->setCursorVisible(false);
 
 	// 模型矩阵主要处理平移、缩放、旋转。一个顶点向量乘模型矩阵，得到世界空间中的顶点位置
-	glm::mat4 modelMat = glm::mat4(1.0f);
+	m_modelMat = glm::mat4(1.0f);
 
 	// 观察矩阵主要将顶点变换到观察矩阵的坐标空间
-	glm::mat4 viewMat = cameraWrapper->lookAtMatrix();
+	m_viewMat = cameraWrapper->lookAtMatrix();
 
 	// 投影矩阵, 裁剪可见坐标，并设置透视效果，远处顶点根据齐次分量越大，顶点越小
-	glm::mat4 projectionMat = glm::perspective(glm::radians(cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
+	m_projectionMat = glm::perspective(glm::radians(cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
 	
-	// set shader param
-	m_singleColorShader->use();
-	m_singleColorShader->setMatrix("viewMat", glm::value_ptr(viewMat));
-	m_singleColorShader->setMatrix("projectionMat", glm::value_ptr(projectionMat));
-
 	m_shader->use();
-	m_shader->setMatrix("viewMat", glm::value_ptr(viewMat));
-	m_shader->setMatrix("projectionMat", glm::value_ptr(projectionMat));
+	m_shader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
+	m_shader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
-	// floor
+	drawDepthTest();
+	drawFloor();
+	drawCube();
+	drawVegetation();
+}
+
+void AdvancedExerciceState::drawDepthTest()
+{
+	m_modelMat = glm::mat4(1.0f);
+	m_modelMat = glm::translate(m_modelMat, glm::vec3(-4.0f, 0.0f, -1.0f));
+
+	m_depthTestShader->use();
+	m_depthTestShader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
+	m_depthTestShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
+	m_depthTestShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
+
+	m_cubeVAO->bindVAO();
+	m_cubeVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void AdvancedExerciceState::drawFloor()
+{
 	glStencilMask(0x00);
 	m_shader->use();
-	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_modelMat = glm::mat4(1.0f);
+	m_shader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
 
 	m_planeVAO->bindVAO();
 	m_planeVAO->bindTexture();
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void AdvancedExerciceState::drawCube()
+{
+	m_singleColorShader->use();
+	m_singleColorShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
+	m_singleColorShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
 	// cube 1
-	glStencilFunc(GL_ALWAYS, 1, 0xff);
-	glStencilMask(0xff);
+	glStencilFunc(GL_ALWAYS, 1, 0xff); // 所有的片段都应该更新模板缓冲
+	glStencilMask(0xff); // 启用模板缓冲写入
 
-	modelMat = glm::translate(modelMat, glm::vec3(-1.0f, 0.0f, -1.0f));
+	m_modelMat = glm::mat4(1.0f);
+	m_modelMat = glm::translate(m_modelMat, glm::vec3(-1.0f, 0.0f, -1.0f));
 	m_shader->use();
-	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_shader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
 
 	m_cubeVAO->bindVAO();
 	m_cubeVAO->bindTexture();
@@ -83,9 +111,9 @@ void AdvancedExerciceState::draw()
 	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 	glStencilMask(0x00);
 
-	modelMat = glm::scale(modelMat, glm::vec3(1.1f));
+	m_modelMat = glm::scale(m_modelMat, glm::vec3(1.1f));
 	m_singleColorShader->use();
-	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// cube 2
@@ -93,10 +121,10 @@ void AdvancedExerciceState::draw()
 	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilMask(0xff);
 
-	modelMat = glm::mat4(1.0f);
-	modelMat = glm::translate(modelMat, glm::vec3(2.0f, 0.0f, 0.0f));
+	m_modelMat = glm::mat4(1.0f);
+	m_modelMat = glm::translate(m_modelMat, glm::vec3(2.0f, 0.0f, 0.0f));
 	m_shader->use();
-	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_shader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// border 2
@@ -104,17 +132,15 @@ void AdvancedExerciceState::draw()
 	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 	glStencilMask(0x00);
 
-	modelMat = glm::scale(modelMat, glm::vec3(1.1f));
+	m_modelMat = glm::scale(m_modelMat, glm::vec3(1.1f));
 	m_singleColorShader->use();
-	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// reset
 	glEnable(GL_DEPTH_TEST);
 	glStencilMask(0xff);
 	glStencilFunc(GL_ALWAYS, 0, 0xff);
-
-	drawVegetation();
 }
 
 void AdvancedExerciceState::drawVegetation()
