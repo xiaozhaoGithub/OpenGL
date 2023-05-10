@@ -14,12 +14,13 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_vegetationVAO = Singleton<TriangleVAOFactory>::instance()->createVegetationVAO();
 
 	m_depthTestShader = Singleton<ShaderFactory>::instance()->shaderProgram("depth_test_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/depth_test_shader.fs");
-
 	m_shader = Singleton<ShaderFactory>::instance()->shaderProgram("cube_texture_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/texture_shader.fs");
 	m_shader->use();
 	m_shader->setInt("sampler1", 0);
-
 	m_singleColorShader = Singleton<ShaderFactory>::instance()->shaderProgram("single_color_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/single_color_shader.fs");
+	m_transparentShader = Singleton<ShaderFactory>::instance()->shaderProgram("transparent_texture_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/transparent_texture_shader.fs");
+	m_transparentShader->use();
+	m_transparentShader->setInt("sampler1", 0);
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -146,7 +147,9 @@ void AdvancedExerciceState::drawCube()
 void AdvancedExerciceState::drawVegetation()
 {
 	// Æ¬¶Î¶ªÆúÎÞ·¨ÊµÏÖäÖÈ¾°ëÍ¸Ã÷µÄÍ¼Ïñ
-	m_shader->use();
+	m_transparentShader->use();
+	m_transparentShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
+	m_transparentShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
 	m_vegetationVAO->bindTexture();
 	m_vegetationVAO->bindVAO();
@@ -155,8 +158,9 @@ void AdvancedExerciceState::drawVegetation()
 	for (unsigned int i = 0; i < m_vegetationPos.size(); i++) {
 		modelMat = glm::mat4(1.0f);
 		modelMat = glm::translate(modelMat, m_vegetationPos[i]);
-		m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
+		m_transparentShader->setMatrix("modelMat", glm::value_ptr(modelMat));
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 }
+

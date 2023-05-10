@@ -24,6 +24,7 @@ private:
 
 	std::shared_ptr<AbstractShader> m_depthTestShader; // 深度测试可视化
 	std::shared_ptr<AbstractShader> m_singleColorShader;
+	std::shared_ptr<AbstractShader> m_transparentShader;
 
 	std::vector<glm::vec3> m_vegetationPos;
 
