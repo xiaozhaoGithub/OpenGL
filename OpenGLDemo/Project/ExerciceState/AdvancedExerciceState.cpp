@@ -97,6 +97,11 @@ void AdvancedExerciceState::drawFloor()
 
 void AdvancedExerciceState::drawCube()
 {
+	// 面剔除，前提: 顶点数据默认以逆时针方向定义一个三角形图元
+	// 优化后、提升超过50%的效率
+	glEnable(GL_CULL_FACE); 
+	glCullFace(GL_BACK);
+
 	m_singleColorShader->use();
 	m_singleColorShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
 	m_singleColorShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
@@ -149,6 +154,7 @@ void AdvancedExerciceState::drawCube()
 	glEnable(GL_DEPTH_TEST);
 	glStencilMask(0xff);
 	glStencilFunc(GL_ALWAYS, 0, 0xff);
+	glDisable(GL_CULL_FACE); // 其他不需要进行面剔除
 }
 
 void AdvancedExerciceState::drawVegetation()

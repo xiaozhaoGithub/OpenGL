@@ -218,6 +218,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\Model.h" />
     <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\VAOFactory.h" />
     <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\ExerciceState.h" />
+    <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\AdvancedExerciceState.h" />
     <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\StateSourceFactory.h" />
     <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\RenderLoop.h" />
     <ClInclude Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader\Shader.h" />
@@ -228,6 +229,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\Model.cpp" />
     <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel\VAOFactory.cpp" />
     <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\ExerciceState.cpp" />
+    <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\AdvancedExerciceState.cpp" />
     <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState\StateSourceFactory.cpp" />
     <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\main.cpp" />
     <ClCompile Include="E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\RenderLoop.cpp" />
