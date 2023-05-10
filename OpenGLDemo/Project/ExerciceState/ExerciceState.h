@@ -113,7 +113,7 @@ public:
 	void draw() override;
 
 private:
-	unsigned int m_normalTriangleVAO;
+	std::shared_ptr<AbstractVAO> m_normalTriangleVAO;
 };
 
 class RichTriangleExerciceState : public AbstractTriangleExerciceState
@@ -134,7 +134,7 @@ public:
 	void draw() override;
 
 protected:
-	unsigned int m_rectVAO;
+	std::shared_ptr<AbstractVAO> m_rectVAO;
 };
 
 class LineRectExerciceState : public RectExerciceState

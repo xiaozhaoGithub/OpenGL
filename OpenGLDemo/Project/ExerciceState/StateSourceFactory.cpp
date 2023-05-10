@@ -1,5 +1,7 @@
 #include "StateSourceFactory.h"
 
+#include "AdvancedExerciceState.h"
+
 StateSourceFactory::StateSourceFactory()
 {
 	m_stateDictionary[{ GLFW_KEY_B, GLFW_KEY_1 }] = []() { return std::make_unique<SpecialTriangleExerciceState>(); };
@@ -27,6 +29,8 @@ StateSourceFactory::StateSourceFactory()
 	m_stateDictionary[{ GLFW_KEY_E, GLFW_KEY_5 }] = []() { return std::make_unique<MultipleLightSourceExerciceState>(); };
 
 	m_stateDictionary[{ GLFW_KEY_F, GLFW_KEY_1 }] = []() { return std::make_unique<ModelExerciceState>(); };
+
+	m_stateDictionary[{ GLFW_KEY_G, GLFW_KEY_1 }] = []() { return std::make_unique<AdvancedExerciceState>(); };
 }
 
 std::unique_ptr<AbstractExerciceState> StateSourceFactory::stateSource(const std::list<int>& keyList)

@@ -70,7 +70,7 @@ FlipTriangleExerciceState::FlipTriangleExerciceState()
 void FlipTriangleExerciceState::draw()
 {
 	m_shader->use();
-	glBindVertexArray(m_normalTriangleVAO);
+	m_normalTriangleVAO->bindVAO();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
@@ -97,7 +97,7 @@ RectExerciceState::RectExerciceState()
 void RectExerciceState::draw()
 {
 	m_shader->use();
-	glBindVertexArray(m_rectVAO);
+	m_rectVAO->bindVAO();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
@@ -109,7 +109,7 @@ LineRectExerciceState::LineRectExerciceState()
 void LineRectExerciceState::draw()
 {
 	m_shader->use();
-	glBindVertexArray(m_rectVAO);
+	m_rectVAO->bindVAO();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

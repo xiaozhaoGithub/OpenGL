@@ -3,10 +3,80 @@
 #include <iostream>
 #include <memory>
 
-#include "glad/glad.h"
-// 请确认是在包含GLFW的头文件之前包含了GLAD的头文件。GLAD的头文件包含了正确的OpenGL头文件（例如GL/gl.h），
-// 所以需要在其它依赖于OpenGL的头文件之前包含GLAD。
 #include "stb_image.h"
+
+#include "CommonDataDef.h"
+
+namespace DataDef
+{
+	const float cubeVertices[] = {
+		// positions          // texture Coords
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+	};
+
+	const float planeVertices[] = {
+		// positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+		 5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+		 5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+		 5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+	};
+
+	const float transparentVertices[] = {
+		// positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+	};
+}
+namespace DD = DataDef;
 
 void AbstractVAO::bindVAO()
 {
@@ -21,7 +91,7 @@ void AbstractVAO::bindTexture()
 	}
 }
 
-unsigned int AbstractVAOFactory::loadTexture(char const* path)
+unsigned int AbstractVAOFactory::loadTexture(char const* path, const TexParam& param)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -41,8 +111,8 @@ unsigned int AbstractVAOFactory::loadTexture(char const* path)
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D); // 在生成纹理之后调用glGenerateMipmap。这会为当前绑定的纹理自动生成所有需要的多级渐远纹理。
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param.wrapS);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param.wrapT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
@@ -55,7 +125,7 @@ unsigned int AbstractVAOFactory::loadTexture(char const* path)
 	return textureID;
 }
 
-unsigned int TriangleVAOFactory::createNormalVAO()
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createNormalVAO()
 {
 	float vertices[] = {
 	-0.5f, -0.5f, 0.0f,
@@ -82,7 +152,7 @@ unsigned int TriangleVAOFactory::createNormalVAO()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑VBO
 
-	return VAO;
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
 
 unsigned int TriangleVAOFactory::createSpecialVAO()
@@ -579,7 +649,97 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createLightMapTargetVAO()
 	return VAO;
 }
 
-unsigned int RectVAOFactory::createNormalVAO()
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createCubeVAO()
+{
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::cubeVertices), DD::cubeVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createAdvancedTargetVAO()
+{
+	auto VAO = createCubeVAO();
+	VAO->insertTexture(0, loadTexture("skin/textrues/marble.jpg"));
+
+	return VAO;
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPlaneVAO()
+{
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::planeVertices), DD::planeVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVPlaneVAO()
+{
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::transparentVertices), DD::transparentVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO()
+{
+	auto VAO = createPlaneVAO();
+	VAO->insertTexture(0, loadTexture("skin/textrues/metal.png"));
+
+	return VAO;
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVegetationVAO()
+{
+	auto VAO = createVPlaneVAO();
+
+	TexParam param;
+	param.wrapS = GL_CLAMP_TO_EDGE;
+	param.wrapT = GL_CLAMP_TO_EDGE;
+
+	VAO->insertTexture(0, loadTexture("skin/textrues/grass.png", param));
+
+	return VAO;
+}
+
+
+std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()
 {
 	float rectVertices[] = {
 		0.5f, 0.5f, 0.0f, 
@@ -617,6 +777,5 @@ unsigned int RectVAOFactory::createNormalVAO()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	return VAO;
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
-

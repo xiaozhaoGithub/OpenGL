@@ -6,6 +6,9 @@
 
 #include "Shader.h"
 #include "Singleton.h"
+#include "glad/glad.h"
+// 请确认是在包含GLFW的头文件之前包含了GLAD的头文件。GLAD的头文件包含了正确的OpenGL头文件（例如GL/gl.h），
+// 所以需要在其它依赖于OpenGL的头文件之前包含GLAD。
 
 class AbstractVAO
 {
@@ -44,7 +47,7 @@ class AbstractVAOFactory
 public:
 	AbstractVAOFactory() {}
 
-	virtual unsigned int createNormalVAO() = 0;
+	virtual std::shared_ptr<AbstractVAO> createNormalVAO() = 0;
 	virtual unsigned int createSpecialVAO() { return 0; };
 	virtual unsigned int createAdjacentVAO() { return 0; };
 	virtual std::pair<unsigned int, unsigned int> createAdjacent2VAO() { return std::pair<unsigned int, unsigned int>(); };
@@ -56,10 +59,21 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createLightVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createTargetVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createLightMapTargetVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createCubeVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createAdvancedTargetVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createPlaneVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createVPlaneVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createFloorVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createVegetationVAO() { return nullptr; }
 
 protected:
+	struct TexParam {
+		int wrapS = GL_REPEAT;
+		int wrapT = GL_REPEAT;
+	};
+
 	// utility function for loading a 2D texture from file
-	unsigned int loadTexture(char const* path);
+	unsigned int loadTexture(char const* path, const TexParam& param = TexParam());
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory
@@ -68,7 +82,7 @@ class TriangleVAOFactory : public AbstractVAOFactory
 public:
 	TriangleVAOFactory() {}
 
-	unsigned int createNormalVAO() override;
+	std::shared_ptr<AbstractVAO> createNormalVAO() override;
 	unsigned int createSpecialVAO() override;
 	unsigned int createAdjacentVAO() override;
 	std::pair<unsigned int, unsigned int> createAdjacent2VAO() override;
@@ -80,6 +94,12 @@ public:
 	std::shared_ptr<AbstractVAO> createLightVAO() override;
 	std::shared_ptr<AbstractVAO> createTargetVAO() override;
 	std::shared_ptr<AbstractVAO> createLightMapTargetVAO() override;
+	std::shared_ptr<AbstractVAO> createCubeVAO() override;
+	std::shared_ptr<AbstractVAO> createAdvancedTargetVAO() override;
+	std::shared_ptr<AbstractVAO> createPlaneVAO() override;
+	std::shared_ptr<AbstractVAO> createVPlaneVAO() override;
+	std::shared_ptr<AbstractVAO> createFloorVAO() override;
+	std::shared_ptr<AbstractVAO> createVegetationVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory
@@ -87,7 +107,7 @@ class RectVAOFactory : public AbstractVAOFactory
 public:
 	RectVAOFactory() {}
 
-	unsigned int createNormalVAO() override;
+	std::shared_ptr<AbstractVAO> createNormalVAO() override;
 };
 #endif
 
