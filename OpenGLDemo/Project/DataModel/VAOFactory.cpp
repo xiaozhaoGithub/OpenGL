@@ -739,6 +739,13 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVegetationVAO()
 	return VAO;
 }
 
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createWindowVAO()
+{
+	auto VAO = createVPlaneVAO();
+	VAO->insertTexture(0, loadTexture("skin/textrues/window.png"));
+
+	return VAO;
+}
 
 std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()
 {

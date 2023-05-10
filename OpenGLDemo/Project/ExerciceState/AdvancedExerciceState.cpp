@@ -12,6 +12,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_cubeVAO = Singleton<TriangleVAOFactory>::instance()->createAdvancedTargetVAO();
 	m_planeVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO();
 	m_vegetationVAO = Singleton<TriangleVAOFactory>::instance()->createVegetationVAO();
+	m_windowVAO = Singleton<TriangleVAOFactory>::instance()->createWindowVAO();
 
 	m_depthTestShader = Singleton<ShaderFactory>::instance()->shaderProgram("depth_test_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/depth_test_shader.fs");
 	m_shader = Singleton<ShaderFactory>::instance()->shaderProgram("cube_texture_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/texture_shader.fs");
@@ -28,10 +29,15 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_vegetationPos.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
 	m_vegetationPos.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
+	m_windowPos.push_back(glm::vec3(0.0f, 0.0f, -1.0f));
+	m_windowPos.push_back(glm::vec3(0.5f, 0.0f, 0.0f));
+	m_windowPos.push_back(glm::vec3(-0.7f, 0.0f, 1.0f));
+
 	// 必须开启缓冲测试，才能使用相关功能
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glEnable(GL_BLEND);
 }
 
 void AdvancedExerciceState::draw()
@@ -59,6 +65,7 @@ void AdvancedExerciceState::draw()
 	drawFloor();
 	drawCube();
 	drawVegetation();
+	drawWindow();
 }
 
 void AdvancedExerciceState::drawDepthTest()
@@ -164,3 +171,30 @@ void AdvancedExerciceState::drawVegetation()
 	}
 }
 
+void AdvancedExerciceState::drawWindow()
+{
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);// 这样只能让最终的alpha分量被源颜色向量的alpha值所影响到
+	
+	m_shader->use();
+
+	m_windowVAO->bindTexture();
+	m_windowVAO->bindVAO();
+
+	// 根据距离排序, 先绘制距离观察坐标原点较远的blend物体, 深度测试不能识别透明内容, 防止片段被丢弃, 出现窗户中看不到另一个窗户的现象
+	// 这种方法对我们这个场景能够正常工作，但它并没有考虑旋转、缩放或其它变换，奇怪形状的物体需要一个不同的计量，而不是仅仅一个位置向量
+	// 更高级的技术还有次序无关透明度
+	std::map<float, glm::vec3> windowDistancePosMap;
+	for (const auto& pos : m_windowPos) {
+		windowDistancePosMap[glm::length(Singleton<CameraWrapper>::instance()->cameraPos() - pos)] = pos;
+	}
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	for (auto iter = windowDistancePosMap.rbegin(); iter != windowDistancePosMap.rend(); ++iter) {
+		modelMat = glm::mat4(1.0f);
+		modelMat = glm::translate(modelMat, iter->second);
+		m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+}
