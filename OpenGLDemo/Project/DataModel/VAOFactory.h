@@ -14,7 +14,7 @@ class AbstractVAO
 {
 public:
 	AbstractVAO(): m_id(0) { }
-	virtual ~AbstractVAO() {}
+	virtual ~AbstractVAO() { glDeleteVertexArrays(1, &m_id); }
 
 	void bindVAO();
 
@@ -66,6 +66,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createFloorVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createVegetationVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createWindowVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createQuadVAO() { return nullptr; }
 
 protected:
 	struct TexParam {
@@ -102,6 +103,7 @@ public:
 	std::shared_ptr<AbstractVAO> createFloorVAO() override;
 	std::shared_ptr<AbstractVAO> createVegetationVAO() override;
 	std::shared_ptr<AbstractVAO> createWindowVAO() override;
+	std::shared_ptr<AbstractVAO> createQuadVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory

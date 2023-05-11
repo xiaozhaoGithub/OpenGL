@@ -77,6 +77,17 @@ namespace DataDef
 		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
 		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
 	};
+
+	float quadVertices[] = {
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f
+	};
 }
 namespace DD = DataDef;
 
@@ -746,6 +757,26 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createWindowVAO()
 	VAO->insertTexture(0, loadTexture("skin/textrues/window.png"));
 
 	return VAO;
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createQuadVAO()
+{
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::quadVertices), DD::quadVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(sizeof(float) * 2));
+	glEnableVertexAttribArray(1);
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
 
 std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()

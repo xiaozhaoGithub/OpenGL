@@ -13,6 +13,11 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_planeVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO();
 	m_vegetationVAO = Singleton<TriangleVAOFactory>::instance()->createVegetationVAO();
 	m_windowVAO = Singleton<TriangleVAOFactory>::instance()->createWindowVAO();
+	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
+	m_postProcessCubeVAO = Singleton<TriangleVAOFactory>::instance()->creatTextureVAO();
+	m_postProcessCubeShader = Singleton<ShaderFactory>::instance()->shaderProgram("texture", "ShaderProgram/Texture/texture_shader.vs", "ShaderProgram/Texture/texture_shader.fs");
+
+	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
 	m_depthTestShader = Singleton<ShaderFactory>::instance()->shaderProgram("depth_test_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/depth_test_shader.fs");
 	m_shader = Singleton<ShaderFactory>::instance()->shaderProgram("cube_texture_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/texture_shader.fs");
@@ -22,6 +27,11 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_transparentShader = Singleton<ShaderFactory>::instance()->shaderProgram("transparent_texture_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/transparent_texture_shader.fs");
 	m_transparentShader->use();
 	m_transparentShader->setInt("sampler1", 0);
+
+	m_screenShader = Singleton<ShaderFactory>::instance()->shaderProgram("screen_texture_shader", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/Advanced/screen_texture_shader.fs");
+	m_screenShader->use();
+	m_screenShader->setInt("sampler1", 0);
+
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -42,14 +52,16 @@ AdvancedExerciceState::AdvancedExerciceState()
 
 void AdvancedExerciceState::draw()
 {
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	m_sceneFramebuffer->bindFramebuffer(); 
+
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
 
 	auto cameraWrapper = Singleton<CameraWrapper>::instance();
 	cameraWrapper->setCursorVisible(false);
 
 	// 模型矩阵主要处理平移、缩放、旋转。一个顶点向量乘模型矩阵，得到世界空间中的顶点位置
-	m_modelMat = glm::mat4(1.0f);
 
 	// 观察矩阵主要将顶点变换到观察矩阵的坐标空间
 	m_viewMat = cameraWrapper->lookAtMatrix();
@@ -66,15 +78,17 @@ void AdvancedExerciceState::draw()
 	drawCube();
 	drawVegetation();
 	drawWindow();
+	drawPostProcessCube();
+	drawFramebuffer();
 }
 
 void AdvancedExerciceState::drawDepthTest()
 {
-	m_modelMat = glm::mat4(1.0f);
-	m_modelMat = glm::translate(m_modelMat, glm::vec3(-4.0f, 0.0f, -1.0f));
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(-4.0f, 0.0f, -1.0f));
 
 	m_depthTestShader->use();
-	m_depthTestShader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
+	m_depthTestShader->setMatrix("modelMat", glm::value_ptr(modelMat));
 	m_depthTestShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
 	m_depthTestShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
@@ -87,8 +101,8 @@ void AdvancedExerciceState::drawFloor()
 {
 	glStencilMask(0x00);
 	m_shader->use();
-	m_modelMat = glm::mat4(1.0f);
-	m_shader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
 
 	m_planeVAO->bindVAO();
 	m_planeVAO->bindTexture();
@@ -100,7 +114,8 @@ void AdvancedExerciceState::drawCube()
 	// 面剔除，前提: 顶点数据默认以逆时针方向定义一个三角形图元
 	// 优化后、提升超过50%的效率
 	glEnable(GL_CULL_FACE); 
-	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);// default
+	glCullFace(GL_BACK); // default
 
 	m_singleColorShader->use();
 	m_singleColorShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
@@ -110,10 +125,10 @@ void AdvancedExerciceState::drawCube()
 	glStencilFunc(GL_ALWAYS, 1, 0xff); // 所有的片段都应该更新模板缓冲
 	glStencilMask(0xff); // 启用模板缓冲写入
 
-	m_modelMat = glm::mat4(1.0f);
-	m_modelMat = glm::translate(m_modelMat, glm::vec3(-1.0f, 0.0f, -1.0f));
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(-1.0f, 0.0f, -1.0f));
 	m_shader->use();
-	m_shader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
+	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
 
 	m_cubeVAO->bindVAO();
 	m_cubeVAO->bindTexture();
@@ -124,9 +139,9 @@ void AdvancedExerciceState::drawCube()
 	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 	glStencilMask(0x00);
 
-	m_modelMat = glm::scale(m_modelMat, glm::vec3(1.1f));
+	modelMat = glm::scale(modelMat, glm::vec3(1.1f));
 	m_singleColorShader->use();
-	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
+	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(modelMat));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// cube 2
@@ -134,10 +149,10 @@ void AdvancedExerciceState::drawCube()
 	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilMask(0xff);
 
-	m_modelMat = glm::mat4(1.0f);
-	m_modelMat = glm::translate(m_modelMat, glm::vec3(2.0f, 0.0f, 0.0f));
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(2.0f, 0.0f, 0.0f));
 	m_shader->use();
-	m_shader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
+	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// border 2
@@ -145,9 +160,9 @@ void AdvancedExerciceState::drawCube()
 	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 	glStencilMask(0x00);
 
-	m_modelMat = glm::scale(m_modelMat, glm::vec3(1.1f));
+	modelMat = glm::scale(modelMat, glm::vec3(1.1f));
 	m_singleColorShader->use();
-	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(m_modelMat));
+	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(modelMat));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// reset
@@ -204,3 +219,37 @@ void AdvancedExerciceState::drawWindow()
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 }
+
+void AdvancedExerciceState::drawPostProcessCube()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(4.0f, 0.0f, -1.0f));
+	m_postProcessCubeShader->use();
+	m_postProcessCubeShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+	m_postProcessCubeVAO->bindVAO();
+	m_postProcessCubeVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void AdvancedExerciceState::drawFramebuffer()
+{
+	// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_DEPTH_TEST);
+	// clear all relevant buffers
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	m_screenShader->use();
+
+	m_quadVAO->bindVAO();
+	// 常见问题：绑定纹理时，误以为纹理Id保存在VAO中，应该绑定帧缓冲中的纹理对象渲染
+	m_quadVAO->bindTexture();
+	m_sceneFramebuffer->bindTexture(); // use the color attachment texture as the texture of the quad plane
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glEnable(GL_DEPTH_TEST);
+}
+
