@@ -67,6 +67,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createVegetationVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createWindowVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createQuadVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createPostProcessVAO() { return nullptr; }
 
 protected:
 	struct TexParam {
@@ -104,6 +105,7 @@ public:
 	std::shared_ptr<AbstractVAO> createVegetationVAO() override;
 	std::shared_ptr<AbstractVAO> createWindowVAO() override;
 	std::shared_ptr<AbstractVAO> createQuadVAO() override;
+	std::shared_ptr<AbstractVAO> createPostProcessVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory

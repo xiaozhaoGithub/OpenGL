@@ -14,8 +14,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_vegetationVAO = Singleton<TriangleVAOFactory>::instance()->createVegetationVAO();
 	m_windowVAO = Singleton<TriangleVAOFactory>::instance()->createWindowVAO();
 	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
-	m_postProcessCubeVAO = Singleton<TriangleVAOFactory>::instance()->creatTextureVAO();
-	m_postProcessCubeShader = Singleton<ShaderFactory>::instance()->shaderProgram("texture", "ShaderProgram/Texture/texture_shader.vs", "ShaderProgram/Texture/texture_shader.fs");
+	m_postProcessCubeVAO = Singleton<TriangleVAOFactory>::instance()->createPostProcessVAO();
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -31,7 +30,6 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_screenShader = Singleton<ShaderFactory>::instance()->shaderProgram("screen_texture_shader", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/Advanced/screen_texture_shader.fs");
 	m_screenShader->use();
 	m_screenShader->setInt("sampler1", 0);
-
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -224,8 +222,9 @@ void AdvancedExerciceState::drawPostProcessCube()
 {
 	glm::mat4 modelMat = glm::mat4(1.0f);
 	modelMat = glm::translate(modelMat, glm::vec3(4.0f, 0.0f, -1.0f));
-	m_postProcessCubeShader->use();
-	m_postProcessCubeShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+	m_shader->use();
+	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
 
 	m_postProcessCubeVAO->bindVAO();
 	m_postProcessCubeVAO->bindTexture();

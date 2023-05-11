@@ -779,6 +779,14 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createQuadVAO()
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
 
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPostProcessVAO()
+{
+	auto VAO = createCubeVAO();
+	VAO->insertTexture(0, loadTexture("skin/container.jpg"));
+
+	return VAO;
+}
+
 std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()
 {
 	float rectVertices[] = {
