@@ -50,7 +50,9 @@ AdvancedExerciceState::AdvancedExerciceState()
 
 void AdvancedExerciceState::draw()
 {
+#ifdef POST_PROCESS
 	m_sceneFramebuffer->bindFramebuffer(); 
+#endif 
 
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -77,7 +79,10 @@ void AdvancedExerciceState::draw()
 	drawVegetation();
 	drawWindow();
 	drawPostProcessCube();
+
+#ifdef POST_PROCESS
 	drawFramebuffer();
+#endif 
 }
 
 void AdvancedExerciceState::drawDepthTest()
