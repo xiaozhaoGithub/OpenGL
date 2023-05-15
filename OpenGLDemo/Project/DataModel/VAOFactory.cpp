@@ -910,6 +910,25 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createSkyboxVAO()
 	return VAO;
 }
 
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createRelectedCubeVAO()
+{
+	auto VAO = createTargetVAO();
+
+	std::vector<std::string> faces = {
+	"skin/textures/skybox/right.jpg",
+	"skin/textures/skybox/left.jpg",
+	"skin/textures/skybox/top.jpg",
+	"skin/textures/skybox/bottom.jpg",
+	"skin/textures/skybox/front.jpg",
+	"skin/textures/skybox/back.jpg"
+	};
+
+	unsigned int texId = loadCubemap(faces);
+	VAO->insertTexture(GL_TEXTURE_CUBE_MAP, texId);
+
+	return VAO;
+}
+
 std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()
 {
 	float rectVertices[] = {

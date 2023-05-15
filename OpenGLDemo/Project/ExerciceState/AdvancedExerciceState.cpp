@@ -16,6 +16,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
 	m_postProcessCubeVAO = Singleton<TriangleVAOFactory>::instance()->createPostProcessVAO();
 	m_skyboxVAO = Singleton<TriangleVAOFactory>::instance()->createSkyboxVAO();
+	m_reflectedCubeVAO = Singleton<TriangleVAOFactory>::instance()->createRelectedCubeVAO();
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -35,6 +36,9 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_cubeMapShader = Singleton<ShaderFactory>::instance()->shaderProgram("cube_map_shader", "ShaderProgram/Advanced/cube_map_shader.vs", "ShaderProgram/Advanced/cube_map_shader.fs");
 	m_cubeMapShader->use();
 	m_cubeMapShader->setInt("sampler1", 0);
+
+	m_reflectedCubeShader = Singleton<ShaderFactory>::instance()->shaderProgram("reflected_cube_shader", "ShaderProgram/Advanced/reflected_cube_shader.vs", "ShaderProgram/Advanced/reflected_cube_shader.fs");
+	setSampler(m_reflectedCubeShader);
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -84,6 +88,7 @@ void AdvancedExerciceState::draw()
 	drawVegetation();
 	drawWindow();
 	drawPostProcessCube();
+	drawReflectedCube();
 	drawSkybox();
 
 #ifdef POST_PROCESS
@@ -242,6 +247,22 @@ void AdvancedExerciceState::drawPostProcessCube()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
+void AdvancedExerciceState::drawReflectedCube()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(4.0f, 0.0f, 3.0f));
+
+	m_reflectedCubeShader->use();
+	m_reflectedCubeShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_reflectedCubeShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
+	m_reflectedCubeShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
+	m_reflectedCubeShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+
+	m_reflectedCubeVAO->bindVAO();
+	m_reflectedCubeVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
 void AdvancedExerciceState::drawSkybox()
 {
 	// 放到最后渲染skybox，减少skybox片段着色器执行次数，以获得轻微的性能提升。
@@ -258,6 +279,12 @@ void AdvancedExerciceState::drawSkybox()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glDepthFunc(GL_LESS);
+}
+
+void AdvancedExerciceState::setSampler(std::shared_ptr<AbstractShader> shader)
+{
+	shader->use();
+	shader->setInt("sampler1", 0);
 }
 
 void AdvancedExerciceState::drawFramebuffer()

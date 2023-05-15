@@ -20,6 +20,7 @@ public:
 	void draw() override;
 
 private:
+	// painter
 	void drawDepthTest();
 	void drawFloor();
 	void drawCube();
@@ -27,7 +28,11 @@ private:
 	void drawWindow();
 	void drawFramebuffer();
 	void drawPostProcessCube();
+	void drawReflectedCube();
 	void drawSkybox();
+
+	// helper
+	void setSampler(std::shared_ptr<AbstractShader> shader);
 
 private:
 	std::shared_ptr<AbstractVAO> m_cubeVAO;
@@ -37,6 +42,7 @@ private:
 	std::shared_ptr<AbstractVAO> m_quadVAO;
 	std::shared_ptr<AbstractVAO> m_postProcessCubeVAO;
 	std::shared_ptr<AbstractVAO> m_skyboxVAO;
+	std::shared_ptr<AbstractVAO> m_reflectedCubeVAO;
 
 	std::shared_ptr<Framebuffer> m_sceneFramebuffer;
 
@@ -45,6 +51,7 @@ private:
 	std::shared_ptr<AbstractShader> m_transparentShader;
 	std::shared_ptr<AbstractShader> m_screenShader;
 	std::shared_ptr<AbstractShader> m_cubeMapShader;
+	std::shared_ptr<AbstractShader> m_reflectedCubeShader;
 
 	std::vector<glm::vec3> m_vegetationPos;
 	std::vector<glm::vec3> m_windowPos;

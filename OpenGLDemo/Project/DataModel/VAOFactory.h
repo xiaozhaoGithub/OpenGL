@@ -71,6 +71,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createPostProcessVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createCubeMapVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createSkyboxVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createRelectedCubeVAO() { return nullptr; }
 
 protected:
 	struct TexParam {
@@ -112,6 +113,7 @@ public:
 	std::shared_ptr<AbstractVAO> createPostProcessVAO() override;
 	std::shared_ptr<AbstractVAO> createCubeMapVAO() override;
 	std::shared_ptr<AbstractVAO> createSkyboxVAO() override;
+	std::shared_ptr<AbstractVAO> createRelectedCubeVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory
