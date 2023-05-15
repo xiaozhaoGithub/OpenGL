@@ -15,6 +15,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_windowVAO = Singleton<TriangleVAOFactory>::instance()->createWindowVAO();
 	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
 	m_postProcessCubeVAO = Singleton<TriangleVAOFactory>::instance()->createPostProcessVAO();
+	m_skyboxVAO = Singleton<TriangleVAOFactory>::instance()->createSkyboxVAO();
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -30,6 +31,10 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_screenShader = Singleton<ShaderFactory>::instance()->shaderProgram("screen_texture_shader", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/Advanced/screen_texture_shader.fs");
 	m_screenShader->use();
 	m_screenShader->setInt("sampler1", 0);
+
+	m_cubeMapShader = Singleton<ShaderFactory>::instance()->shaderProgram("cube_map_shader", "ShaderProgram/Advanced/cube_map_shader.vs", "ShaderProgram/Advanced/cube_map_shader.fs");
+	m_cubeMapShader->use();
+	m_cubeMapShader->setInt("sampler1", 0);
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -79,6 +84,7 @@ void AdvancedExerciceState::draw()
 	drawVegetation();
 	drawWindow();
 	drawPostProcessCube();
+	drawSkybox();
 
 #ifdef POST_PROCESS
 	drawFramebuffer();
@@ -138,7 +144,7 @@ void AdvancedExerciceState::drawCube()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// border 1
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 	glStencilMask(0x00);
 
@@ -148,7 +154,7 @@ void AdvancedExerciceState::drawCube()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// cube 2
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilMask(0xff);
 
@@ -159,7 +165,7 @@ void AdvancedExerciceState::drawCube()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// border 2
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 	glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 	glStencilMask(0x00);
 
@@ -169,7 +175,7 @@ void AdvancedExerciceState::drawCube()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// reset
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	glStencilMask(0xff);
 	glStencilFunc(GL_ALWAYS, 0, 0xff);
 	glDisable(GL_CULL_FACE); // 其他不需要进行面剔除
@@ -234,6 +240,24 @@ void AdvancedExerciceState::drawPostProcessCube()
 	m_postProcessCubeVAO->bindVAO();
 	m_postProcessCubeVAO->bindTexture();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void AdvancedExerciceState::drawSkybox()
+{
+	// 放到最后渲染skybox，减少skybox片段着色器执行次数，以获得轻微的性能提升。
+	glDepthFunc(GL_LEQUAL);
+
+	m_cubeMapShader->use();
+
+	auto viewMat = glm::mat4(glm::mat3(m_viewMat)); // 移除观察矩阵的平移参数， 产生空间无限大的效果
+	m_cubeMapShader->setMatrix("viewMat", glm::value_ptr(viewMat));
+	m_cubeMapShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
+
+	m_skyboxVAO->bindVAO();
+	m_skyboxVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glDepthFunc(GL_LESS);
 }
 
 void AdvancedExerciceState::drawFramebuffer()

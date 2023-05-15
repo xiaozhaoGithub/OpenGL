@@ -96,11 +96,16 @@ void AbstractVAO::bindVAO()
 	glBindVertexArray(m_id);
 }
 
+void AbstractVAO::insertTexture(unsigned int type, unsigned int id)
+{
+	m_textures.push_back(std::make_pair(type, id));
+}
+
 void AbstractVAO::bindTexture()
 {
-	for (auto pair : m_indexTextureMap) {
-		glActiveTexture(GL_TEXTURE0 + pair.first);
-		glBindTexture(GL_TEXTURE_2D, pair.second);
+	for (unsigned int i = 0; i < m_textures.size(); i++) {
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(m_textures[i].first, m_textures[i].second);
 	}
 }
 
@@ -134,6 +139,43 @@ unsigned int AbstractVAOFactory::loadTexture(char const* path, const TexParam& p
 	}
 
 	stbi_image_free(data);
+
+	return textureID;
+}
+
+unsigned int AbstractVAOFactory::loadCubemap(const std::vector<std::string>& faces, const TexParam& param)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	for (unsigned int i = 0; i < faces.size(); i++) {
+		int width, height, nrComponents;
+		unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
+		if (data) {
+			GLenum format;
+			if (nrComponents == 1)
+				format = GL_RED;
+			else if (nrComponents == 3)
+				format = GL_RGB;
+			else if (nrComponents == 4)
+				format = GL_RGBA;
+
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+			
+			stbi_image_free(data);
+		}
+		else {
+			std::cout << "Texture failed to load at path: " << faces[i].c_str() << std::endl;
+		}
+	}
+
+	// 因正好处于两个面之间的纹理坐标可能不能击中一个面（由于一些硬件限制），边界产生透明线条，使用边界值环绕解决
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // 
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); // 类似z方向向量
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	return textureID;
 }
@@ -385,7 +427,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::creatTextureVAO()
 	stbi_image_free(pixels);
 
 	std::shared_ptr<AbstractVAO> abstractVAO = std::make_shared<TriangleVAO>(VAO);
-	abstractVAO->insertTexture(0, texture1);
+	abstractVAO->insertTexture(GL_TEXTURE_2D, texture1);
 
 	return abstractVAO;
 }
@@ -424,7 +466,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::creatMixTextureUnitVAO()
 
 	stbi_image_free(pixels);
 
-	abstractVAO->insertTexture(1, texture2);
+	abstractVAO->insertTexture(GL_TEXTURE_2D, texture2);
 
 	return abstractVAO;
 }
@@ -556,8 +598,8 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::create3DVAO()
 	stbi_image_free(pixels);
 
 	std::shared_ptr<AbstractVAO> abstractVAO = std::make_shared<TriangleVAO>(VAO);
-	abstractVAO->insertTexture(0, texture1);
-	abstractVAO->insertTexture(1, texture2);
+	abstractVAO->insertTexture(GL_TEXTURE_2D, texture1);
+	abstractVAO->insertTexture(GL_TEXTURE_2D, texture2);
 
 	return abstractVAO;
 }
@@ -650,9 +692,9 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createLightMapTargetVAO()
 	glActiveTexture(GL_TEXTURE2); // 着色器需要对纹理单元设置位置（0），此处也需要将纹理对象绑定到对应的纹理单元（GL_TEXTURE0）
 	unsigned int textureEmissionMap = loadTexture("skin/matrix.jpg");
 
-	VAO->insertTexture(0, textureDiffuseMap);
-	VAO->insertTexture(1, textureSpecularMap);
-	VAO->insertTexture(2, textureEmissionMap);
+	VAO->insertTexture(GL_TEXTURE_2D, textureDiffuseMap);
+	VAO->insertTexture(GL_TEXTURE_2D, textureSpecularMap);
+	VAO->insertTexture(GL_TEXTURE_2D, textureEmissionMap);
 
 	// 常见问题：重置顶点属性指针时，第一个location参数设置了错误的位置导致崩溃
 	// 常见问题：重置顶点属性指针时，第一个size参数与实际的不一致导致部分渲染戳错（实际大小为2，实际填3导致顶部一个三角形未渲染）
@@ -685,7 +727,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createCubeVAO()
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createAdvancedTargetVAO()
 {
 	auto VAO = createCubeVAO();
-	VAO->insertTexture(0, loadTexture("skin/textrues/marble.jpg"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/marble.jpg"));
 
 	return VAO;
 }
@@ -733,7 +775,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVPlaneVAO()
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO()
 {
 	auto VAO = createPlaneVAO();
-	VAO->insertTexture(0, loadTexture("skin/textrues/metal.png"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/metal.png"));
 
 	return VAO;
 }
@@ -746,7 +788,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVegetationVAO()
 	param.wrapS = GL_CLAMP_TO_EDGE;
 	param.wrapT = GL_CLAMP_TO_EDGE;
 
-	VAO->insertTexture(0, loadTexture("skin/textrues/grass.png", param));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/grass.png", param));
 
 	return VAO;
 }
@@ -754,7 +796,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVegetationVAO()
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createWindowVAO()
 {
 	auto VAO = createVPlaneVAO();
-	VAO->insertTexture(0, loadTexture("skin/textrues/window.png"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/window.png"));
 
 	return VAO;
 }
@@ -782,7 +824,88 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createQuadVAO()
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPostProcessVAO()
 {
 	auto VAO = createCubeVAO();
-	VAO->insertTexture(0, loadTexture("skin/container.jpg"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/container.jpg"));
+
+	return VAO;
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createCubeMapVAO()
+{
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
+
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createSkyboxVAO()
+{
+	auto VAO = createCubeMapVAO();
+
+	std::vector<std::string> faces = {
+		"skin/textures/skybox/right.jpg",
+		"skin/textures/skybox/left.jpg",
+		"skin/textures/skybox/top.jpg",
+		"skin/textures/skybox/bottom.jpg",
+		"skin/textures/skybox/front.jpg",
+		"skin/textures/skybox/back.jpg"
+	};
+
+	unsigned int texId = loadCubemap(faces);
+	VAO->insertTexture(GL_TEXTURE_CUBE_MAP, texId);
 
 	return VAO;
 }

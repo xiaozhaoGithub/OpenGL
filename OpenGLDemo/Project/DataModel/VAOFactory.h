@@ -2,7 +2,8 @@
 #define VAOFACTORY_H_
 
 #include <string>
-#include <map>
+#include <vector>
+#include <utility>
 
 #include "Shader.h"
 #include "Singleton.h"
@@ -18,7 +19,7 @@ public:
 
 	void bindVAO();
 
-	void insertTexture(unsigned int index, unsigned int id) { m_indexTextureMap[index] = id; }
+	void insertTexture(unsigned int type, unsigned int id);
 
 	/** 
 	 * @brief 每次渲染前，需绑定待渲染的纹理对象，就像绑定VAO一样
@@ -29,7 +30,7 @@ protected:
 	unsigned int m_id;
 
 private:
-	std::map<unsigned int, unsigned int> m_indexTextureMap;
+	std::vector<std::pair<unsigned int, unsigned int> > m_textures;
 };
 
 class TriangleVAO : public AbstractVAO
@@ -68,6 +69,8 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createWindowVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createQuadVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPostProcessVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createCubeMapVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createSkyboxVAO() { return nullptr; }
 
 protected:
 	struct TexParam {
@@ -77,6 +80,7 @@ protected:
 
 	// utility function for loading a 2D texture from file
 	unsigned int loadTexture(char const* path, const TexParam& param = TexParam());
+	unsigned int loadCubemap(const std::vector<std::string>& faces, const TexParam& param = TexParam());
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory
@@ -106,6 +110,8 @@ public:
 	std::shared_ptr<AbstractVAO> createWindowVAO() override;
 	std::shared_ptr<AbstractVAO> createQuadVAO() override;
 	std::shared_ptr<AbstractVAO> createPostProcessVAO() override;
+	std::shared_ptr<AbstractVAO> createCubeMapVAO() override;
+	std::shared_ptr<AbstractVAO> createSkyboxVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory
