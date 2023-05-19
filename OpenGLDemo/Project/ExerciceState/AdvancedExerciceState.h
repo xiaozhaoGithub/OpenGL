@@ -29,6 +29,7 @@ private:
 	void drawFramebuffer();
 	void drawPostProcessCube();
 	void drawReflectedCube();
+	void drawModel();
 	void drawSkybox();
 
 	// helper
@@ -43,6 +44,7 @@ private:
 	std::shared_ptr<AbstractVAO> m_postProcessCubeVAO;
 	std::shared_ptr<AbstractVAO> m_skyboxVAO;
 	std::shared_ptr<AbstractVAO> m_reflectedCubeVAO;
+	std::unique_ptr<Model> m_model;
 
 	std::shared_ptr<Framebuffer> m_sceneFramebuffer;
 
@@ -52,6 +54,7 @@ private:
 	std::shared_ptr<AbstractShader> m_screenShader;
 	std::shared_ptr<AbstractShader> m_cubeMapShader;
 	std::shared_ptr<AbstractShader> m_reflectedCubeShader;
+	std::shared_ptr<AbstractShader> m_refractShader;
 
 	std::vector<glm::vec3> m_vegetationPos;
 	std::vector<glm::vec3> m_windowPos;

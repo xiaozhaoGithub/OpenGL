@@ -17,6 +17,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_postProcessCubeVAO = Singleton<TriangleVAOFactory>::instance()->createPostProcessVAO();
 	m_skyboxVAO = Singleton<TriangleVAOFactory>::instance()->createSkyboxVAO();
 	m_reflectedCubeVAO = Singleton<TriangleVAOFactory>::instance()->createRelectedCubeVAO();
+	m_model = std::make_unique<Model>("skin/nanosuit/nanosuit.obj");
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -39,6 +40,9 @@ AdvancedExerciceState::AdvancedExerciceState()
 
 	m_reflectedCubeShader = Singleton<ShaderFactory>::instance()->shaderProgram("reflected_cube_shader", "ShaderProgram/Advanced/reflected_cube_shader.vs", "ShaderProgram/Advanced/reflected_cube_shader.fs");
 	setSampler(m_reflectedCubeShader);
+
+	m_refractShader = Singleton<ShaderFactory>::instance()->shaderProgram("refract_shader", "ShaderProgram/Advanced/reflected_cube_shader.vs", "ShaderProgram/Advanced/refract_shader.fs");
+	setSampler(m_refractShader);
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -89,6 +93,7 @@ void AdvancedExerciceState::draw()
 	drawWindow();
 	drawPostProcessCube();
 	drawReflectedCube();
+	drawModel();
 	drawSkybox();
 
 #ifdef POST_PROCESS
@@ -261,6 +266,20 @@ void AdvancedExerciceState::drawReflectedCube()
 	m_reflectedCubeVAO->bindVAO();
 	m_reflectedCubeVAO->bindTexture();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void AdvancedExerciceState::drawModel()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(0.0f, -0.49f, 2.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(0.05f));
+
+	m_refractShader->use();
+	m_refractShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_refractShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
+	m_refractShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
+
+	m_model->draw(m_refractShader);
 }
 
 void AdvancedExerciceState::drawSkybox()
