@@ -1,9 +1,10 @@
 #include "AdvancedExerciceState.h"
 
+#include <vector>
+
 #include "Singleton.h"
 #include "CommonDataDef.h"
-
-#include <vector>
+#include "TextureHelper.h"
 
 namespace UCDD = UiCommonDataDef;
 
@@ -17,7 +18,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_postProcessCubeVAO = Singleton<TriangleVAOFactory>::instance()->createPostProcessVAO();
 	m_skyboxVAO = Singleton<TriangleVAOFactory>::instance()->createSkyboxVAO();
 	m_reflectedCubeVAO = Singleton<TriangleVAOFactory>::instance()->createRelectedCubeVAO();
-	m_model = std::make_unique<Model>("skin/nanosuit/nanosuit.obj");
+	m_nanosuitModel = std::make_unique<Model>("skin/nanosuit_reflection/nanosuit.obj");
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -44,6 +45,20 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_refractShader = Singleton<ShaderFactory>::instance()->shaderProgram("refract_shader", "ShaderProgram/Advanced/reflected_cube_shader.vs", "ShaderProgram/Advanced/refract_shader.fs");
 	setSampler(m_refractShader);
 
+	m_reflectMapShader = Singleton<ShaderFactory>::instance()->shaderProgram("reflect_map", "ShaderProgram/Advanced/reflect_map.vs", "ShaderProgram/Advanced/reflect_map.fs");
+	m_reflectMapShader->use();
+	m_reflectMapShader->setInt("material.texture_cube_map1", 3);
+
+	std::vector<std::string> faces = {
+		"skin/textures/skybox/right.jpg",
+		"skin/textures/skybox/left.jpg",
+		"skin/textures/skybox/top.jpg",
+		"skin/textures/skybox/bottom.jpg",
+		"skin/textures/skybox/front.jpg",
+		"skin/textures/skybox/back.jpg"
+	};
+	m_skyboxTexId = TextureHelper::loadCubemap(faces);
+
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
 	m_vegetationPos.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
@@ -59,6 +74,11 @@ AdvancedExerciceState::AdvancedExerciceState()
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	glEnable(GL_BLEND);
+}
+
+AdvancedExerciceState::~AdvancedExerciceState()
+{
+	glDeleteTextures(1, &m_skyboxTexId);
 }
 
 void AdvancedExerciceState::draw()
@@ -94,6 +114,7 @@ void AdvancedExerciceState::draw()
 	drawPostProcessCube();
 	drawReflectedCube();
 	drawModel();
+	drawReflectMapModel();
 	drawSkybox();
 
 #ifdef POST_PROCESS
@@ -279,7 +300,37 @@ void AdvancedExerciceState::drawModel()
 	m_refractShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
 	m_refractShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
-	m_model->draw(m_refractShader);
+	m_nanosuitModel->draw(m_refractShader);
+}
+
+void AdvancedExerciceState::drawReflectMapModel()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(1.0f, -0.49f, 2.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(0.05f));
+
+	m_reflectMapShader->use();
+	m_reflectMapShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_reflectMapShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
+	m_reflectMapShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
+
+	m_reflectMapShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+	m_reflectMapShader->setVec("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_reflectMapShader->setInt("material.diffuse", 0); 
+	m_reflectMapShader->setInt("material.specular", 1); 
+	m_reflectMapShader->setInt("material.emission", 2); 
+	m_reflectMapShader->setFloat("material.shininess", 64.0f);
+
+	// directional light
+	m_reflectMapShader->setVec("dirLight.direction", -0.2f, -1.0f, -0.3f);
+	m_reflectMapShader->setVec("dirLight.ambient", 1.0f, 1.0f, 1.0f);
+	m_reflectMapShader->setVec("dirLight.diffuse", 1.0f, 1.0f, 1.0f);
+	m_reflectMapShader->setVec("dirLight.specular", 1.0f, 1.0f, 1.0f);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexId);
+
+	m_nanosuitModel->draw(m_reflectMapShader);
 }
 
 void AdvancedExerciceState::drawSkybox()

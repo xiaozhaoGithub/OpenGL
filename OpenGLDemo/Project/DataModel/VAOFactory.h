@@ -72,16 +72,6 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createCubeMapVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createSkyboxVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createRelectedCubeVAO() { return nullptr; }
-
-protected:
-	struct TexParam {
-		int wrapS = GL_REPEAT;
-		int wrapT = GL_REPEAT;
-	};
-
-	// utility function for loading a 2D texture from file
-	unsigned int loadTexture(char const* path, const TexParam& param = TexParam());
-	unsigned int loadCubemap(const std::vector<std::string>& faces, const TexParam& param = TexParam());
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory

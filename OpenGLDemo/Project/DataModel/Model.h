@@ -25,7 +25,7 @@ public:
 private:
 	void processNode(aiNode* node, const aiScene* scene);
 	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-	std::vector<Texture> processMaterial(aiMaterial* material, aiTextureType type, const std::string& name);
+	std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const std::string& name);
 
 	unsigned int textureFromFile(const std::string& path, char const* name);
 

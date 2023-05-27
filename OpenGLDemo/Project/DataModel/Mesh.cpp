@@ -43,6 +43,9 @@ void Mesh::draw(std::shared_ptr<AbstractShader> shader)
 {
 	unsigned int diffuseNum = 1;
 	unsigned int specularNum = 1;
+	unsigned int normalNum = 1;
+	unsigned int heightNum = 1;
+	unsigned int reflectionNum = 1;
 
 	for (unsigned int i = 0; i < m_textures.size(); ++i) {
 		std::string textureName;
@@ -52,6 +55,15 @@ void Mesh::draw(std::shared_ptr<AbstractShader> shader)
 		}
 		else if (type == "specular") {
 			textureName = type + std::to_string(specularNum++);
+		}
+		else if (type == "texture_normal") {
+			textureName = type + std::to_string(normalNum++);
+		}
+		else if (type == "texture_height") {
+			textureName = type + std::to_string(heightNum++);
+		}
+		else if (type == "texture_reflection") {
+			textureName = type + std::to_string(reflectionNum++);
 		}
 
 		std::string name = "material." + textureName;

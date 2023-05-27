@@ -102,18 +102,30 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 		// 网格的漫反射贴图
-		auto diffuseMaps = processMaterial(material, aiTextureType_DIFFUSE, "diffuse");
+		auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
 		// 镜面光贴图
-		auto specularMaps= processMaterial(material, aiTextureType_SPECULAR, "specular");
+		auto specularMaps= loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+		// 3. normal maps
+		std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+		// 4. height maps
+		std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
+		textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+	
+		// 反射光贴图
+		auto reflectionMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_reflection");
+		textures.insert(textures.end(), reflectionMaps.begin(), reflectionMaps.end());
 	}
 
 	return Mesh(vertexs, indices, textures);
 }
 
-std::vector<Texture> Model::processMaterial(aiMaterial* material, aiTextureType type, const std::string& name)
+std::vector<Texture> Model::loadMaterialTextures(aiMaterial* material, aiTextureType type, const std::string& name)
 {
 	std::vector<Texture> textures;
 

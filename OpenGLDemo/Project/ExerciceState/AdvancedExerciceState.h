@@ -17,6 +17,8 @@ class AdvancedExerciceState : public AbstractExerciceState
 {
 public:
 	AdvancedExerciceState();
+	~AdvancedExerciceState();
+
 	void draw() override;
 
 private:
@@ -30,6 +32,7 @@ private:
 	void drawPostProcessCube();
 	void drawReflectedCube();
 	void drawModel();
+	void drawReflectMapModel();
 	void drawSkybox();
 
 	// helper
@@ -44,7 +47,7 @@ private:
 	std::shared_ptr<AbstractVAO> m_postProcessCubeVAO;
 	std::shared_ptr<AbstractVAO> m_skyboxVAO;
 	std::shared_ptr<AbstractVAO> m_reflectedCubeVAO;
-	std::unique_ptr<Model> m_model;
+	std::unique_ptr<Model> m_nanosuitModel;
 
 	std::shared_ptr<Framebuffer> m_sceneFramebuffer;
 
@@ -55,6 +58,9 @@ private:
 	std::shared_ptr<AbstractShader> m_cubeMapShader;
 	std::shared_ptr<AbstractShader> m_reflectedCubeShader;
 	std::shared_ptr<AbstractShader> m_refractShader;
+	std::shared_ptr<AbstractShader> m_reflectMapShader;
+
+	unsigned int m_skyboxTexId;
 
 	std::vector<glm::vec3> m_vegetationPos;
 	std::vector<glm::vec3> m_windowPos;
