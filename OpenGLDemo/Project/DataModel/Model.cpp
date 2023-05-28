@@ -2,11 +2,11 @@
 
 #include <iostream>
 #include <fstream>
+#include <time.h>
 
 #include "glad/glad.h"
 #include "stb_image.h"
 //#include "LogWrapper.h"
-#include <time.h>
 
 Model::Model(const std::string& path)
 {
@@ -55,11 +55,33 @@ void Model::processNode(aiNode* node, const aiScene* scene)
 
 Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 {
+#ifdef BATCH_VERTEXT_ATTR
+	VertexsData vertexsData;
+#else
 	std::vector<Vertex> vertexs;
+#endif
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 
-	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {	
+#ifdef BATCH_VERTEXT_ATTR
+		vertexsData.positions.emplace_back(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+
+		if (mesh->HasNormals()) {
+			vertexsData.normals.emplace_back(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+		}
+		else {
+			vertexsData.normals.emplace_back(glm::vec3());
+		}
+
+		// Assimp允许有8个不同的纹理坐标
+		if (mesh->HasTextureCoords(0)) {
+			vertexsData.texCoords.emplace_back(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+		}
+		else {
+			vertexsData.texCoords.emplace_back(0.0f, 0.0f);
+		}
+#else
 		Vertex vertex;
 		vertex.position.x = mesh->mVertices[i].x;
 		vertex.position.y = mesh->mVertices[i].y;
@@ -86,6 +108,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 		// bitangent
 
 		vertexs.push_back(vertex);
+#endif
 	}
 
 	// 现在遍历每个网格的面(面是一个网格的图元，如三角形)并检索相应的顶点索引。
@@ -122,7 +145,11 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 		textures.insert(textures.end(), reflectionMaps.begin(), reflectionMaps.end());
 	}
 
+#ifdef BATCH_VERTEXT_ATTR
+	return Mesh(vertexsData, indices, textures);
+#else
 	return Mesh(vertexs, indices, textures);
+#endif
 }
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* material, aiTextureType type, const std::string& name)

@@ -8,6 +8,12 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ################################################################################
+# Add definitions. 
+################################################################################
+add_definitions(-DBATCH_VERTEXT_ATTR)
+#add_compile_definitions(BATCH_VERTEXT_ATTR) #cmake 3.12
+
+################################################################################
 # Set target platform type. 
 ################################################################################
 if(UNIX)

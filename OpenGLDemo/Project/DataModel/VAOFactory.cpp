@@ -638,19 +638,49 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createLightMapTargetVAO()
 
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createCubeVAO()
 {
+	// 复制缓冲接口测试, 先生成源buffer
+	unsigned int srcVBO;
+	glGenBuffers(1, &srcVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, srcVBO);
+
+	// 三种填充顶点数据Buffer的方式
+	// way 1
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::cubeVertices), DD::cubeVertices, GL_STATIC_DRAW);
+
+	// way 2
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(DD::cubeVertices), nullptr, GL_STATIC_DRAW);
+	//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(DD::cubeVertices), DD::cubeVertices);
+
+	// way 3
+	// 如果要直接映射数据到缓冲，而不事先将其存储到临时内存中，glMapBuffer这个函数会很有用
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(DD::cubeVertices), nullptr, GL_STATIC_DRAW);
+	//void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	//memcpy(ptr, DD::cubeVertices, sizeof(DD::cubeVertices));
+	//// 告诉OpenGL我们不再需要这个指针了
+	//GLboolean ret = glUnmapBuffer(GL_ARRAY_BUFFER);
+	//if (ret == GL_FALSE) {
+	//	std::cout << "vertex data map failed." << std::endl;
+	//}
+
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-
+	
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::cubeVertices), DD::cubeVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::cubeVertices), nullptr, GL_STATIC_DRAW); //必须分配内存
+
+	// 复制缓冲
+	glBindBuffer(GL_COPY_READ_BUFFER, srcVBO);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, VBO);
+	glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(DD::cubeVertices));
+	//glCopyBufferSubData(GL_ARRAY_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(DD::cubeVertices));
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
-
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
 	glEnableVertexAttribArray(1);
 
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));

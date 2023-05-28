@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "glm.hpp"
 #include "Shader.h"
@@ -12,6 +13,13 @@ struct Vertex
 	glm::vec3 position;
 	glm::vec3 normal;
 	glm::vec2 texCoords;
+}; 
+
+struct VertexsData
+{
+	std::vector<glm::vec3> positions;
+	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> texCoords;
 };
 
 struct Texture
@@ -27,8 +35,9 @@ class Mesh
 {
 public:
 	Mesh(const std::vector<Vertex>& vertexs, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
+	Mesh(const VertexsData& vertexs, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
 
-	void setupMesh();
+	void initMesh();
 	void draw(std::shared_ptr<AbstractShader> shader);
 
 private:
@@ -37,6 +46,8 @@ private:
 	unsigned int EBO;
 
 	std::vector<Vertex> m_vertexs;
+	VertexsData m_vertexsData;
+
 	std::vector<unsigned int> m_indices;
 	std::vector<Texture> m_textures;
 };

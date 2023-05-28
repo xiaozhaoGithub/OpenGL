@@ -68,11 +68,11 @@
       <SDLCheck>true</SDLCheck>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;BATCH_VERTEXT_ATTR;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;BATCH_VERTEXT_ATTR;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -130,13 +130,13 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <SDLCheck>true</SDLCheck>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;BATCH_VERTEXT_ATTR;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;BATCH_VERTEXT_ATTR;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\build;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\ExerciceState;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\DataModel;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\CommonFileSrc;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\Assimp\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\glm;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\Shader;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\stb;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLAD\include;E:\WorkSpaceCode\GithubCode\OpenGL\OpenGLDemo\Project\third_lib\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
