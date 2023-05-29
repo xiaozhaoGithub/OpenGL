@@ -34,9 +34,12 @@ private:
 	void drawModel();
 	void drawReflectMapModel();
 	void drawSkybox();
+	void drawPoints();
+	void drawFragCoordCube();
 
 	// helper
 	void setSampler(std::shared_ptr<AbstractShader> shader);
+	void initUniformBlock();
 
 private:
 	std::shared_ptr<AbstractVAO> m_cubeVAO;
@@ -48,6 +51,7 @@ private:
 	std::shared_ptr<AbstractVAO> m_skyboxVAO;
 	std::shared_ptr<AbstractVAO> m_reflectedCubeVAO;
 	std::unique_ptr<Model> m_nanosuitModel;
+	std::shared_ptr<AbstractVAO> m_pointVAO;
 
 	std::shared_ptr<Framebuffer> m_sceneFramebuffer;
 
@@ -59,8 +63,11 @@ private:
 	std::shared_ptr<AbstractShader> m_reflectedCubeShader;
 	std::shared_ptr<AbstractShader> m_refractShader;
 	std::shared_ptr<AbstractShader> m_reflectMapShader;
+	std::shared_ptr<AbstractShader> m_pointsShader;
+	std::shared_ptr<AbstractShader> m_fragCoordShader;
 
 	unsigned int m_skyboxTexId;
+	unsigned int m_uboExampleBlock;
 
 	std::vector<glm::vec3> m_vegetationPos;
 	std::vector<glm::vec3> m_windowPos;

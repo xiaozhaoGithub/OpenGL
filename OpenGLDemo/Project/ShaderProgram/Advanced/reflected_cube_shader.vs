@@ -1,13 +1,16 @@
-#version 330 core
+#version 420 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 
+uniform mat4 modelMat;
+layout (std140, binding = 0) uniform Matrices  // 420可直接在着色器中绑定点
+{
+	mat4 viewMat;
+	mat4 projectionMat;
+};
+
 out vec3 position;
 out vec3 normal;
-
-uniform mat4 modelMat;
-uniform mat4 viewMat;
-uniform mat4 projectionMat;
 
 void main()
 {

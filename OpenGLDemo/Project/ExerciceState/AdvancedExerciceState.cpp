@@ -19,6 +19,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_skyboxVAO = Singleton<TriangleVAOFactory>::instance()->createSkyboxVAO();
 	m_reflectedCubeVAO = Singleton<TriangleVAOFactory>::instance()->createRelectedCubeVAO();
 	m_nanosuitModel = std::make_unique<Model>("skin/nanosuit_reflection/nanosuit.obj");
+	m_pointVAO = Singleton<TriangleVAOFactory>::instance()->createPointVAO();
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -49,15 +50,13 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_reflectMapShader->use();
 	m_reflectMapShader->setInt("material.texture_cube_map1", 3);
 
-	std::vector<std::string> faces = {
-		"skin/textures/skybox/right.jpg",
-		"skin/textures/skybox/left.jpg",
-		"skin/textures/skybox/top.jpg",
-		"skin/textures/skybox/bottom.jpg",
-		"skin/textures/skybox/front.jpg",
-		"skin/textures/skybox/back.jpg"
-	};
-	m_skyboxTexId = TextureHelper::loadCubemap(faces);
+	m_pointsShader = Singleton<ShaderFactory>::instance()->shaderProgram("points_shader", "ShaderProgram/Advanced/points_shader.vs", "ShaderProgram/Advanced/points_shader.fs");
+	m_pointsShader->use();
+	m_pointsShader->setInt("material.texture_cube_map1", 3);
+
+	m_fragCoordShader = Singleton<ShaderFactory>::instance()->shaderProgram("frag_coord_shader", "ShaderProgram/Advanced/frag_coord_shader.vs", "ShaderProgram/Advanced/frag_coord_shader.fs");
+	m_fragCoordShader->setUniformBlockBinding("Matrices", 0);
+	setSampler(m_fragCoordShader);
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -69,11 +68,24 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_windowPos.push_back(glm::vec3(0.5f, 0.0f, 0.0f));
 	m_windowPos.push_back(glm::vec3(-0.7f, 0.0f, 1.0f));
 
+	std::vector<std::string> faces = {
+		"skin/textures/skybox/right.jpg",
+		"skin/textures/skybox/left.jpg",
+		"skin/textures/skybox/top.jpg",
+		"skin/textures/skybox/bottom.jpg",
+		"skin/textures/skybox/front.jpg",
+		"skin/textures/skybox/back.jpg"
+	};
+	m_skyboxTexId = TextureHelper::loadCubemap(faces);
+
+	initUniformBlock();
+
 	// 必须开启缓冲测试，才能使用相关功能
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	glEnable(GL_BLEND);
+	glEnable(GL_PROGRAM_POINT_SIZE); // 顶点着色器中修改点大小，默认是关闭的
 }
 
 AdvancedExerciceState::~AdvancedExerciceState()
@@ -103,8 +115,13 @@ void AdvancedExerciceState::draw()
 	m_projectionMat = glm::perspective(glm::radians(cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
 	
 	m_shader->use();
-	m_shader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
-	m_shader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
+
+	glBindBuffer(GL_UNIFORM_BUFFER, m_uboExampleBlock);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr, GL_STATIC_DRAW);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(m_viewMat));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(m_projectionMat));
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	drawDepthTest();
 	drawFloor();
@@ -116,6 +133,8 @@ void AdvancedExerciceState::draw()
 	drawModel();
 	drawReflectMapModel();
 	drawSkybox();
+	drawPoints();
+	drawFragCoordCube();
 
 #ifdef POST_PROCESS
 	drawFramebuffer();
@@ -129,8 +148,6 @@ void AdvancedExerciceState::drawDepthTest()
 
 	m_depthTestShader->use();
 	m_depthTestShader->setMatrix("modelMat", glm::value_ptr(modelMat));
-	m_depthTestShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
-	m_depthTestShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
 	m_cubeVAO->bindVAO();
 	m_cubeVAO->bindTexture();
@@ -158,8 +175,6 @@ void AdvancedExerciceState::drawCube()
 	glCullFace(GL_BACK); // default
 
 	m_singleColorShader->use();
-	m_singleColorShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
-	m_singleColorShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
 	// cube 1
 	glStencilFunc(GL_ALWAYS, 1, 0xff); // 所有的片段都应该更新模板缓冲
@@ -216,8 +231,6 @@ void AdvancedExerciceState::drawVegetation()
 {
 	// 片段丢弃无法实现渲染半透明的图像
 	m_transparentShader->use();
-	m_transparentShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
-	m_transparentShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
 	m_vegetationVAO->bindTexture();
 	m_vegetationVAO->bindVAO();
@@ -280,8 +293,6 @@ void AdvancedExerciceState::drawReflectedCube()
 
 	m_reflectedCubeShader->use();
 	m_reflectedCubeShader->setMatrix("modelMat", glm::value_ptr(modelMat));
-	m_reflectedCubeShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
-	m_reflectedCubeShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 	m_reflectedCubeShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
 
 	m_reflectedCubeVAO->bindVAO();
@@ -297,8 +308,6 @@ void AdvancedExerciceState::drawModel()
 
 	m_refractShader->use();
 	m_refractShader->setMatrix("modelMat", glm::value_ptr(modelMat));
-	m_refractShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
-	m_refractShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
 	m_nanosuitModel->draw(m_refractShader);
 }
@@ -311,8 +320,6 @@ void AdvancedExerciceState::drawReflectMapModel()
 
 	m_reflectMapShader->use();
 	m_reflectMapShader->setMatrix("modelMat", glm::value_ptr(modelMat));
-	m_reflectMapShader->setMatrix("viewMat", glm::value_ptr(m_viewMat));
-	m_reflectMapShader->setMatrix("projectionMat", glm::value_ptr(m_projectionMat));
 
 	m_reflectMapShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
 	m_reflectMapShader->setVec("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -351,10 +358,55 @@ void AdvancedExerciceState::drawSkybox()
 	glDepthFunc(GL_LESS);
 }
 
+void AdvancedExerciceState::drawPoints()
+{
+	m_pointsShader->use();
+
+	m_pointVAO->bindVAO();
+
+	for (int i = 0; i < 7; ++i) {
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		modelMat = glm::translate(modelMat, glm::vec3(-0.1 * i, 0.1 * i, 2.0f));
+		m_pointsShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+		//glPointSize(30);
+		glDrawArrays(GL_POINTS, 0, 1); // GL_POINTS 而不是 GL_POINT
+	}
+}
+
+void AdvancedExerciceState::drawFragCoordCube()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(-4.0f, 0.0f, -4.0f));
+
+	m_fragCoordShader->use();
+	m_fragCoordShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+	m_cubeVAO->bindVAO();
+	m_cubeVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
 void AdvancedExerciceState::setSampler(std::shared_ptr<AbstractShader> shader)
 {
 	shader->use();
 	shader->setInt("sampler1", 0);
+}
+
+void AdvancedExerciceState::initUniformBlock()
+{
+	// Uniform缓冲对象比起独立的uniform有很多好处。
+	// 1.一次设置很多uniform会比一个一个设置多个uniform要快很多
+	// 2.比起在多个着色器中修改同样的uniform，在Uniform缓冲中修改一次会更容易一些。
+	// 3.最后一个好处可能不会立即显现，如果使用Uniform缓冲对象的话，你可以在着色器中使用更多的uniform。
+	// OpenGL限制了它能够处理的uniform数量，这可以通过GL_MAX_VERTEX_UNIFORM_COMPONENTS来查询。当使用Uniform缓冲对象时，最大的数量会更高。所以，当你达到了uniform的最大数量时（比如再做骨骼动画(Skeletal Animation)的时候），你总是可以选择使用Uniform缓冲对象。
+	glGenBuffers(1, &m_uboExampleBlock);
+	glBindBuffer(GL_UNIFORM_BUFFER, m_uboExampleBlock);
+	glBufferData(GL_UNIFORM_BUFFER, 32, NULL, GL_STATIC_DRAW); // 分配152字节的内存
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_uboExampleBlock); // 绑定点 0
+	//glBindBufferRange(GL_UNIFORM_BUFFER, 0, m_uboExampleBlock, 0, sizeof(glm::mat4) * 2);
 }
 
 void AdvancedExerciceState::drawFramebuffer()

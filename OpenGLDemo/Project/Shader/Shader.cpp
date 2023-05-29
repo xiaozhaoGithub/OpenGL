@@ -121,6 +121,11 @@ void AbstractShader::setMatrix(const std::string& name, float* value)
 	glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, value);
 }
 
+void AbstractShader::setUniformBlockBinding(const std::string& name, unsigned int value)
+{
+	glUniformBlockBinding(m_id, glGetUniformBlockIndex(m_id, name.c_str()), value);
+}
+
 SimpleShader::SimpleShader(const char* vertexPath, const char* fragmentPath)
 	: AbstractShader(vertexPath, fragmentPath)
 {

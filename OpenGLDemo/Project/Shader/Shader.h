@@ -30,6 +30,8 @@ public:
 
 	void setMatrix(const std::string& name, float* value);
 
+	void setUniformBlockBinding(const std::string& name, unsigned int value);
+
 protected:
 	unsigned int m_id;
 };

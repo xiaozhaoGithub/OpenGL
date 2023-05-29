@@ -72,6 +72,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createCubeMapVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createSkyboxVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createRelectedCubeVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createPointVAO() { return nullptr; }
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory
@@ -104,6 +105,7 @@ public:
 	std::shared_ptr<AbstractVAO> createCubeMapVAO() override;
 	std::shared_ptr<AbstractVAO> createSkyboxVAO() override;
 	std::shared_ptr<AbstractVAO> createRelectedCubeVAO() override;
+	std::shared_ptr<AbstractVAO> createPointVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory
