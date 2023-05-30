@@ -18,28 +18,21 @@ uniform float time;
 
 in VsOut
 {
-	vec2 texCoords;
-	vec3 normalVector;
-	vec3 FragPos;
+	vec3 normal;
 } gs_in[];
 
 
-// 注：若存在几何着色器，则顶点着色器的输出，需要在几何着色器中进行传递。
-out vec2 texturePos;
-out vec3 normalVector;
-out vec3 FragPos;
-
+const float magnitude = 0.01;
 void GenerateLine(int index)
 {
-	float magnitude = 1.0;
 	
 	gl_Position = projectionMat * (gl_in[index].gl_Position);
 	EmitVertex();	
 	
-	gl_Position = projectionMat * (gl_in[index].gl_Position + vec4(normalize(gs_in[index].normalVector), 0.0) * magnitude);
+	gl_Position = projectionMat * (gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * magnitude);
 	EmitVertex();	
 
-	EmitVertex();	
+	EndPrimitive();	
 }
 
 void main()

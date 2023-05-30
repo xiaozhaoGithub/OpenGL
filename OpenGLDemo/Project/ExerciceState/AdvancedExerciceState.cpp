@@ -65,7 +65,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_explodeShader->use();
 	m_explodeShader->setInt("material.texture_cube_map1", 3);
 
-	m_normalVisibleShader = Singleton<ShaderFactory>::instance()->shaderProgram("normal_visible_shader", "ShaderProgram/Advanced/explode_shader.vs", "ShaderProgram/Advanced/normal_visible_shader.gs", "ShaderProgram/Advanced/single_color_shader.fs");
+	m_normalVisibleShader = Singleton<ShaderFactory>::instance()->shaderProgram("normal_visible_shader", "ShaderProgram/Advanced/normal_visible_shader.vs", "ShaderProgram/Advanced/normal_visible_shader.gs", "ShaderProgram/Advanced/single_color_shader.fs");
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -85,7 +85,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 		"skin/textures/skybox/front.jpg",
 		"skin/textures/skybox/back.jpg"
 	};
-	//m_skyboxTexId = TextureHelper::loadCubemap(faces);
+	m_skyboxTexId = TextureHelper::loadCubemap(faces);
 
 	initUniformBlock();
 
@@ -469,6 +469,27 @@ void AdvancedExerciceState::drawNormalVisibleModel()
 	glm::mat4 modelMat = glm::mat4(1.0f);
 	modelMat = glm::translate(modelMat, glm::vec3(3.0f, -0.49f, 2.0f));
 	modelMat = glm::scale(modelMat, glm::vec3(0.05f));
+
+	m_reflectMapShader->use();
+	m_reflectMapShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+	m_reflectMapShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());	m_reflectMapShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+	m_reflectMapShader->setVec("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_reflectMapShader->setInt("material.diffuse", 0);
+	m_reflectMapShader->setInt("material.specular", 1);
+	m_reflectMapShader->setInt("material.emission", 2);
+	m_reflectMapShader->setFloat("material.shininess", 64.0f);
+
+	// directional light
+	m_reflectMapShader->setVec("dirLight.direction", -0.2f, -1.0f, -0.3f);
+	m_reflectMapShader->setVec("dirLight.ambient", 1.0f, 1.0f, 1.0f);
+	m_reflectMapShader->setVec("dirLight.diffuse", 1.0f, 1.0f, 1.0f);
+	m_reflectMapShader->setVec("dirLight.specular", 1.0f, 1.0f, 1.0f);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexId);
+	m_nanosuitModel->draw(m_refractShader);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 	m_normalVisibleShader->use();
 	m_normalVisibleShader->setMatrix("modelMat", glm::value_ptr(modelMat));
