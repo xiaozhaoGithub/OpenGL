@@ -36,6 +36,10 @@ private:
 	void drawSkybox();
 	void drawPoints();
 	void drawFragCoordCube();
+	void drawGeometryLines();
+	void drawGeometryTriangles();
+	void drawExplodeModel();
+	void drawNormalVisibleModel();
 
 	// helper
 	void setSampler(std::shared_ptr<AbstractShader> shader);
@@ -52,6 +56,7 @@ private:
 	std::shared_ptr<AbstractVAO> m_reflectedCubeVAO;
 	std::unique_ptr<Model> m_nanosuitModel;
 	std::shared_ptr<AbstractVAO> m_pointVAO;
+	std::shared_ptr<AbstractVAO> m_pointsVAO;
 
 	std::shared_ptr<Framebuffer> m_sceneFramebuffer;
 
@@ -65,6 +70,10 @@ private:
 	std::shared_ptr<AbstractShader> m_reflectMapShader;
 	std::shared_ptr<AbstractShader> m_pointsShader;
 	std::shared_ptr<AbstractShader> m_fragCoordShader;
+	std::shared_ptr<AbstractShader> m_linesShader;
+	std::shared_ptr<AbstractShader> m_houseShader;
+	std::shared_ptr<AbstractShader> m_explodeShader;
+	std::shared_ptr<AbstractShader> m_normalVisibleShader;
 
 	unsigned int m_skyboxTexId;
 	unsigned int m_uboExampleBlock;

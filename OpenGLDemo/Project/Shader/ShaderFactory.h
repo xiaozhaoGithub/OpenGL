@@ -11,6 +11,7 @@ class ShaderFactory
 {
 public:
 	std::shared_ptr<AbstractShader> shaderProgram(const std::string& key, const char* vertexPath, const char* fragmentPath);
+	std::shared_ptr<AbstractShader> shaderProgram(const std::string& key, const char* vertexPath, const char* geometryPath, const char* fragmentPath);
 
 private:
 	std::map<std::string, std::shared_ptr<AbstractShader> > m_map;

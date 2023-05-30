@@ -7,8 +7,9 @@
 
 #include "glad/glad.h"
 
-AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
+AbstractShader::AbstractShader(const char* vertexPath, const char* geometryPath, const char* fragmentPath)
 {
+	// compile vertex shader
 	std::fstream vertexStream(vertexPath, std::ios_base::in);
 	if (!vertexStream.is_open()) {
 		std::cout << "Open vertex shader file fail. path: " << vertexPath << std::endl;
@@ -18,12 +19,10 @@ AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
 	strVertexStream << vertexStream.rdbuf();
 	vertexStream.close();
 
-	// compile vertex shader
 	std::string tmpSouce = strVertexStream.str(); // 必须先转成std::string类型, 再c_str, 否则乱码
 	const char* vertexSource = tmpSouce.c_str();
 
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexSource, NULL);
 	glCompileShader(vertexShader);
 
@@ -35,7 +34,32 @@ AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
 		std::cout << "vertex shader compile fail. reason: " << infoLog << std::endl;
 	}
 
+	// compile geometry shader (optional)
+	unsigned int geometryShader;
+	if (geometryPath) {
+		std::fstream geometryStream(geometryPath, std::ios_base::in);
+		if (!geometryStream.is_open()) {
+			std::cout << "Open geometry shader file fail. path: " << fragmentPath << std::endl;
+		}
+		std::stringstream strGeometryStream;
+		strGeometryStream << geometryStream.rdbuf();
+		geometryStream.close();
 
+		tmpSouce = strGeometryStream.str(); // 必须先转成std::string类型, 再c_str, 否则乱码
+		const char* geometrySource = tmpSouce.c_str();
+
+		geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometryShader, 1, &geometrySource, NULL);
+		glCompileShader(geometryShader);
+
+		glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			char infoLog[512];
+			glGetShaderInfoLog(geometryShader, 512, NULL, infoLog);
+			std::cout << "geometry shader compile fail. reason: " << infoLog << std::endl;
+		}
+	}
+	
 	// compile fragment shader
 	std::fstream fragmentStream(fragmentPath, std::ios_base::in);
 	if (!fragmentStream.is_open()) {
@@ -49,8 +73,7 @@ AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
 	tmpSouce = strFragmentStream.str(); // 必须先转成std::string类型, 再c_str, 否则乱码
 	const char* fragmentSource = tmpSouce.c_str();
 
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
 	glCompileShader(fragmentShader);
 
@@ -64,6 +87,9 @@ AbstractShader::AbstractShader(const char* vertexPath, const char* fragmentPath)
 	// link shader program
 	m_id = glCreateProgram();
 	glAttachShader(m_id, vertexShader);
+	if (geometryPath) {
+		glAttachShader(m_id, geometryShader);
+	}
 	glAttachShader(m_id, fragmentShader);
 	glLinkProgram(m_id);
 
@@ -126,8 +152,8 @@ void AbstractShader::setUniformBlockBinding(const std::string& name, unsigned in
 	glUniformBlockBinding(m_id, glGetUniformBlockIndex(m_id, name.c_str()), value);
 }
 
-SimpleShader::SimpleShader(const char* vertexPath, const char* fragmentPath)
-	: AbstractShader(vertexPath, fragmentPath)
+SimpleShader::SimpleShader(const char* vertexPath, const char* geometryPath, const char* fragmentPath)
+	: AbstractShader(vertexPath, geometryPath, fragmentPath)
 {
 }
 

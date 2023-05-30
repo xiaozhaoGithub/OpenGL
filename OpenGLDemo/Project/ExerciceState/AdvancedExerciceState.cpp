@@ -20,6 +20,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_reflectedCubeVAO = Singleton<TriangleVAOFactory>::instance()->createRelectedCubeVAO();
 	m_nanosuitModel = std::make_unique<Model>("skin/nanosuit_reflection/nanosuit.obj");
 	m_pointVAO = Singleton<TriangleVAOFactory>::instance()->createPointVAO();
+	m_pointsVAO = Singleton<TriangleVAOFactory>::instance()->createPointsVAO();
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -50,13 +51,21 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_reflectMapShader->use();
 	m_reflectMapShader->setInt("material.texture_cube_map1", 3);
 
-	m_pointsShader = Singleton<ShaderFactory>::instance()->shaderProgram("points_shader", "ShaderProgram/Advanced/points_shader.vs", "ShaderProgram/Advanced/points_shader.fs");
+	m_pointsShader = Singleton<ShaderFactory>::instance()->shaderProgram("points_shader", "ShaderProgram/Advanced/points_shader.vs", "ShaderProgram/Advanced/single_color_shader.fs");
 	m_pointsShader->use();
 	m_pointsShader->setInt("material.texture_cube_map1", 3);
 
 	m_fragCoordShader = Singleton<ShaderFactory>::instance()->shaderProgram("frag_coord_shader", "ShaderProgram/Advanced/frag_coord_shader.vs", "ShaderProgram/Advanced/frag_coord_shader.fs");
 	m_fragCoordShader->setUniformBlockBinding("Matrices", 0);
 	setSampler(m_fragCoordShader);
+
+	m_linesShader = Singleton<ShaderFactory>::instance()->shaderProgram("geometry_lines_shader", "ShaderProgram/Advanced/geometry_lines_shader.vs", "ShaderProgram/Advanced/geometry_lines_shader.gs", "ShaderProgram/Advanced/single_color_shader.fs");
+	m_houseShader = Singleton<ShaderFactory>::instance()->shaderProgram("geometry_house_shader", "ShaderProgram/Advanced/geometry_house_shader.vs", "ShaderProgram/Advanced/geometry_house_shader.gs", "ShaderProgram/Advanced/geometry_house_shader.fs");
+	m_explodeShader = Singleton<ShaderFactory>::instance()->shaderProgram("explode_shader", "ShaderProgram/Advanced/explode_shader.vs", "ShaderProgram/Advanced/explode_shader.gs", "ShaderProgram/Advanced/explode_shader.fs");
+	m_explodeShader->use();
+	m_explodeShader->setInt("material.texture_cube_map1", 3);
+
+	m_normalVisibleShader = Singleton<ShaderFactory>::instance()->shaderProgram("normal_visible_shader", "ShaderProgram/Advanced/explode_shader.vs", "ShaderProgram/Advanced/normal_visible_shader.gs", "ShaderProgram/Advanced/single_color_shader.fs");
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -76,7 +85,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 		"skin/textures/skybox/front.jpg",
 		"skin/textures/skybox/back.jpg"
 	};
-	m_skyboxTexId = TextureHelper::loadCubemap(faces);
+	//m_skyboxTexId = TextureHelper::loadCubemap(faces);
 
 	initUniformBlock();
 
@@ -135,6 +144,10 @@ void AdvancedExerciceState::draw()
 	drawSkybox();
 	drawPoints();
 	drawFragCoordCube();
+	drawGeometryLines();
+	drawGeometryTriangles();
+	drawExplodeModel();
+	drawNormalVisibleModel();
 
 #ifdef POST_PROCESS
 	drawFramebuffer();
@@ -385,6 +398,83 @@ void AdvancedExerciceState::drawFragCoordCube()
 	m_cubeVAO->bindVAO();
 	m_cubeVAO->bindTexture();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void AdvancedExerciceState::drawGeometryLines()
+{
+	m_linesShader->use();
+
+	m_pointVAO->bindVAO();
+	float step = 0.3f;
+	for (int i = 0; i < 4; ++i) {
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		if (i % 2 == 0) {
+			modelMat = glm::translate(modelMat, glm::vec3(-4.0f + i * step, 0.0f, 3.0f));
+		}
+		else {
+			float xOffset = (i - 1) * step;
+			int yOffset = i - 2;
+			if (yOffset < 0) {
+				yOffset = 1;
+			}
+			modelMat = glm::translate(modelMat, glm::vec3(-4.0f + xOffset, 0.0f + yOffset * step, 3.0f));
+		}
+		m_pointsShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+		glDrawArrays(GL_POINTS, 0, 1);
+	}
+}
+
+void AdvancedExerciceState::drawGeometryTriangles()
+{
+	m_houseShader->use();
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	m_houseShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+	m_pointsVAO->bindVAO();
+	glDrawArrays(GL_POINTS, 0, 4);
+}
+
+void AdvancedExerciceState::drawExplodeModel()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(2.0f, -0.49f, 2.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(0.05f));
+
+	m_explodeShader->use();
+	m_explodeShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_explodeShader->setFloat("time", (float)glfwGetTime());
+
+	m_explodeShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+	m_explodeShader->setVec("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_explodeShader->setInt("material.diffuse", 0);
+	m_explodeShader->setInt("material.specular", 1);
+	m_explodeShader->setInt("material.emission", 2);
+	m_explodeShader->setFloat("material.shininess", 64.0f);
+
+	// directional light
+	m_explodeShader->setVec("dirLight.direction", -0.2f, -1.0f, -0.3f);
+	m_explodeShader->setVec("dirLight.ambient", 1.0f, 1.0f, 1.0f);
+	m_explodeShader->setVec("dirLight.diffuse", 1.0f, 1.0f, 1.0f);
+	m_explodeShader->setVec("dirLight.specular", 1.0f, 1.0f, 1.0f);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexId);
+
+	m_nanosuitModel->draw(m_explodeShader);
+}
+
+void AdvancedExerciceState::drawNormalVisibleModel()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(3.0f, -0.49f, 2.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(0.05f));
+
+	m_normalVisibleShader->use();
+	m_normalVisibleShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_normalVisibleShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+
+	m_nanosuitModel->draw(m_normalVisibleShader);
 }
 
 void AdvancedExerciceState::setSampler(std::shared_ptr<AbstractShader> shader)

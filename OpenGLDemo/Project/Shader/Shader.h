@@ -11,7 +11,7 @@
 class AbstractShader
 {
 public:
-	AbstractShader(const char* vertexPath, const char* fragmentPath);
+	AbstractShader(const char* vertexPath, const char* geomertyPath, const char* fragmentPath);
 	virtual ~AbstractShader();
 
 	virtual void use() = 0;
@@ -37,12 +37,12 @@ protected:
 };
 
 /**
- * @brief 编译顶点着色器和片段着色器（几何着色器未实现）
+ * @brief 编译顶点着色器、几何着色器、片段着色器
  */
 class SimpleShader : public AbstractShader
 {
 public:
-	SimpleShader(const char* vertexPath, const char* fragmentPath);
+	SimpleShader(const char* vertexPath, const char* geometryPath, const char* fragmentPath);
 	void use() override;
 };
 
