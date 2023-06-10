@@ -67,6 +67,33 @@ void Mesh::initMesh()
 
 void Mesh::draw(std::shared_ptr<AbstractShader> shader)
 {
+	bindTexture(shader);
+
+	// 绘制网格
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, (GLsizei)m_indices.size(), GL_UNSIGNED_INT, nullptr);
+	glBindVertexArray(0);
+}
+
+void Mesh::draw(std::shared_ptr<AbstractShader> shader, unsigned int instanceNum)
+{
+	bindTexture(shader);
+
+	glBindVertexArray(VAO);
+	glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)m_indices.size(), GL_UNSIGNED_INT, nullptr, instanceNum);
+}
+
+void Mesh::setRuleCb(std::function<void()> rule)
+{
+	glBindVertexArray(VAO);
+
+	rule();
+
+	glBindVertexArray(0);
+}
+
+void Mesh::bindTexture(std::shared_ptr<AbstractShader> shader)
+{
 	unsigned int diffuseNum = 1;
 	unsigned int specularNum = 1;
 	unsigned int normalNum = 1;
@@ -99,9 +126,4 @@ void Mesh::draw(std::shared_ptr<AbstractShader> shader)
 		glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
 	}
 	glActiveTexture(GL_TEXTURE0);
-
-	// 绘制网格
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, (GLsizei)m_indices.size(), GL_UNSIGNED_INT, nullptr);
-	glBindVertexArray(0);
 }

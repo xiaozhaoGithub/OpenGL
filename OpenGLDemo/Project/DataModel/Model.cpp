@@ -37,6 +37,20 @@ void Model::draw(std::shared_ptr<AbstractShader> shader)
 	}
 }
 
+void Model::draw(std::shared_ptr<AbstractShader> shader, unsigned int instanceNum)
+{
+	for (unsigned int i = 0; i < m_meshes.size(); i++) {
+		m_meshes[i].draw(shader, instanceNum);
+	}
+}
+
+void Model::setRuleCb(std::function<void()> rule)
+{
+	for (unsigned int i = 0; i < m_meshes.size(); i++) {
+		m_meshes[i].setRuleCb(rule);
+	}
+}
+
 void Model::processNode(aiNode* node, const aiScene* scene)
 {
 	for (unsigned int i = 0; i < node->mNumMeshes; i++) {

@@ -68,12 +68,14 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createVegetationVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createWindowVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createQuadVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createQuadColorVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPostProcessVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createCubeMapVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createSkyboxVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createRelectedCubeVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPointVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPointsVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createInstancedVAO() { return nullptr; }
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory
@@ -102,12 +104,14 @@ public:
 	std::shared_ptr<AbstractVAO> createVegetationVAO() override;
 	std::shared_ptr<AbstractVAO> createWindowVAO() override;
 	std::shared_ptr<AbstractVAO> createQuadVAO() override;
+	std::shared_ptr<AbstractVAO> createQuadColorVAO() override;
 	std::shared_ptr<AbstractVAO> createPostProcessVAO() override;
 	std::shared_ptr<AbstractVAO> createCubeMapVAO() override;
 	std::shared_ptr<AbstractVAO> createSkyboxVAO() override;
 	std::shared_ptr<AbstractVAO> createRelectedCubeVAO() override;
 	std::shared_ptr<AbstractVAO> createPointVAO() override;
 	std::shared_ptr<AbstractVAO> createPointsVAO() override;
+	std::shared_ptr<AbstractVAO> createInstancedVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory

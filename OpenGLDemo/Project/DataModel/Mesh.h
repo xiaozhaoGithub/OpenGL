@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 
 #include "glm.hpp"
 #include "Shader.h"
@@ -39,6 +40,12 @@ public:
 
 	void initMesh();
 	void draw(std::shared_ptr<AbstractShader> shader);
+	void draw(std::shared_ptr<AbstractShader> shader, unsigned int instanceNum);
+
+	void setRuleCb(std::function<void()> rule);
+
+private:
+	void bindTexture(std::shared_ptr<AbstractShader> shader);
 
 private:
 	unsigned int VAO;

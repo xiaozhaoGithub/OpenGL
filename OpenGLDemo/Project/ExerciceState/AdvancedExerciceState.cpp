@@ -21,6 +21,9 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_nanosuitModel = std::make_unique<Model>("skin/nanosuit_reflection/nanosuit.obj");
 	m_pointVAO = Singleton<TriangleVAOFactory>::instance()->createPointVAO();
 	m_pointsVAO = Singleton<TriangleVAOFactory>::instance()->createPointsVAO();
+	m_instanceArrayVAO = Singleton<TriangleVAOFactory>::instance()->createInstancedVAO();
+	m_planetModel = std::make_unique<Model>("skin/Model/planet/planet.obj");
+	m_rockModel = std::make_unique<Model>("skin/Model/rock/rock.obj");
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
 
@@ -66,6 +69,12 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_explodeShader->setInt("material.texture_cube_map1", 3);
 
 	m_normalVisibleShader = Singleton<ShaderFactory>::instance()->shaderProgram("normal_visible_shader", "ShaderProgram/Advanced/normal_visible_shader.vs", "ShaderProgram/Advanced/normal_visible_shader.gs", "ShaderProgram/Advanced/single_color_shader.fs");
+	m_instanceArrayShader = Singleton<ShaderFactory>::instance()->shaderProgram("instance_array_shader", "ShaderProgram/Advanced/instance_array_shader.vs", "ShaderProgram/Advanced/instance_array_shader.fs");
+	
+	m_planetShader = Singleton<ShaderFactory>::instance()->shaderProgram("planet_shader", "ShaderProgram/Advanced/planet_shader.vs", "ShaderProgram/Advanced/normal_model.fs");
+	m_planetByInstanceShader = Singleton<ShaderFactory>::instance()->shaderProgram("planet_instance_shader", "ShaderProgram/Advanced/planet_instance_shader.vs", "ShaderProgram/Advanced/normal_model.fs");
+	//glm::inverse();
+	//glm::transpose();
 
 	m_vegetationPos.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
 	m_vegetationPos.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
@@ -88,6 +97,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_skyboxTexId = TextureHelper::loadCubemap(faces);
 
 	initUniformBlock();
+	initRockModelMat();
 
 	// 必须开启缓冲测试，才能使用相关功能
 	glEnable(GL_DEPTH_TEST);
@@ -100,6 +110,8 @@ AdvancedExerciceState::AdvancedExerciceState()
 AdvancedExerciceState::~AdvancedExerciceState()
 {
 	glDeleteTextures(1, &m_skyboxTexId);
+
+	delete[] m_rockModelMat;
 }
 
 void AdvancedExerciceState::draw()
@@ -121,7 +133,7 @@ void AdvancedExerciceState::draw()
 	m_viewMat = cameraWrapper->lookAtMatrix();
 
 	// 投影矩阵, 裁剪可见坐标，并设置透视效果，远处顶点根据齐次分量越大，顶点越小
-	m_projectionMat = glm::perspective(glm::radians(cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
+	m_projectionMat = glm::perspective(glm::radians(cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 1000.0f);
 	
 	m_shader->use();
 
@@ -148,6 +160,9 @@ void AdvancedExerciceState::draw()
 	drawGeometryTriangles();
 	drawExplodeModel();
 	drawNormalVisibleModel();
+	drawInstanceByArray();
+	//drawPlanetaryBeltByUniform();
+	drawPlanetaryBeltByInstance();
 
 #ifdef POST_PROCESS
 	drawFramebuffer();
@@ -498,6 +513,58 @@ void AdvancedExerciceState::drawNormalVisibleModel()
 	m_nanosuitModel->draw(m_normalVisibleShader);
 }
 
+void AdvancedExerciceState::drawInstanceByArray()
+{
+	m_instanceArrayShader->use();
+
+	m_instanceArrayVAO->bindVAO();
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(-4.0f, 0.5f, -1.0f));
+	m_instanceArrayShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+}
+
+void AdvancedExerciceState::drawPlanetaryBeltByUniform()
+{
+	// planet
+	m_planetShader->use();
+	m_planetShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(5.0f, 5.0f, -5.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(1.0f, 1.0f, 1.0f));
+	m_planetShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_planetModel->draw(m_planetShader);
+
+	// rock
+	for (unsigned int i = 0; i < m_mountOfRock; i++) {
+		m_planetShader->setMatrix("modelMat", glm::value_ptr(m_rockModelMat[i]));
+		m_rockModel->draw(m_planetShader);
+	}
+}
+
+void AdvancedExerciceState::drawPlanetaryBeltByInstance()
+{	// planet
+	m_planetShader->use();
+	m_planetShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(5.0f, 5.0f, -5.0f));
+	modelMat = glm::scale(modelMat, glm::vec3(1.0f, 1.0f, 1.0f));
+	m_planetShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	m_planetModel->draw(m_planetShader);
+
+	// rock
+	m_planetByInstanceShader->use();
+	m_planetByInstanceShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
+	m_rockModel->draw(m_planetByInstanceShader, m_mountOfRock);
+}
+
 void AdvancedExerciceState::setSampler(std::shared_ptr<AbstractShader> shader)
 {
 	shader->use();
@@ -518,6 +585,65 @@ void AdvancedExerciceState::initUniformBlock()
 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_uboExampleBlock); // 绑定点 0
 	//glBindBufferRange(GL_UNIFORM_BUFFER, 0, m_uboExampleBlock, 0, sizeof(glm::mat4) * 2);
+}
+
+void AdvancedExerciceState::initRockModelMat()
+{
+	srand((unsigned int)time(NULL));
+
+	m_mountOfRock = 1000;
+	m_rockModelMat = new glm::mat4[m_mountOfRock];
+
+	float offset = 2.5f;
+	float radius = 50.0f;
+	for (unsigned int i = 0; i < m_mountOfRock; i++) {
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		float angle = (float)i / (float)m_mountOfRock * 360.0f;
+
+		float randomValue = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle) * radius + randomValue;
+
+		randomValue = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = randomValue + 0.4f;
+
+		randomValue = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + randomValue;
+
+		modelMat = glm::translate(modelMat, glm::vec3(x, y, z));
+
+		float scale = (rand() % 20) / 100.0f + 0.05f;
+		modelMat = glm::scale(modelMat, glm::vec3(scale));
+
+		float rotAngle = (float)(rand() % 360);
+		modelMat = glm::rotate(modelMat, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+		m_rockModelMat[i] = modelMat;
+	}
+
+	m_rockModel->setRuleCb(std::bind(&AdvancedExerciceState::rockModelRuleCb, this));
+}
+
+void AdvancedExerciceState::rockModelRuleCb()
+{
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * m_mountOfRock, &m_rockModelMat[0], GL_STATIC_DRAW);
+
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4) * 2));
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4) * 3));
+
+	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(4);
+	glEnableVertexAttribArray(5);
+	glEnableVertexAttribArray(6);
+
+	glVertexAttribDivisor(3, 1);
+	glVertexAttribDivisor(4, 1);
+	glVertexAttribDivisor(5, 1);
+	glVertexAttribDivisor(6, 1);
 }
 
 void AdvancedExerciceState::drawFramebuffer()

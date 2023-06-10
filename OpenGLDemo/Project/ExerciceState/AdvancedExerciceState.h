@@ -40,10 +40,17 @@ private:
 	void drawGeometryTriangles();
 	void drawExplodeModel();
 	void drawNormalVisibleModel();
+	void drawInstanceByArray();
+	void drawPlanetaryBeltByUniform(); // 2000: 10FPS左右，性能消耗大
+	void drawPlanetaryBeltByInstance(); // 2000: 60FPS, 10w: 47FPS, 100w: 4FPS
 
 	// helper
 	void setSampler(std::shared_ptr<AbstractShader> shader);
 	void initUniformBlock();
+	void initRockModelMat();
+
+	// callback
+	void rockModelRuleCb();
 
 private:
 	std::shared_ptr<AbstractVAO> m_cubeVAO;
@@ -57,6 +64,9 @@ private:
 	std::unique_ptr<Model> m_nanosuitModel;
 	std::shared_ptr<AbstractVAO> m_pointVAO;
 	std::shared_ptr<AbstractVAO> m_pointsVAO;
+	std::shared_ptr<AbstractVAO> m_instanceArrayVAO;
+	std::unique_ptr<Model> m_planetModel;
+	std::unique_ptr<Model> m_rockModel;
 
 	std::shared_ptr<Framebuffer> m_sceneFramebuffer;
 
@@ -74,6 +84,9 @@ private:
 	std::shared_ptr<AbstractShader> m_houseShader;
 	std::shared_ptr<AbstractShader> m_explodeShader;
 	std::shared_ptr<AbstractShader> m_normalVisibleShader;
+	std::shared_ptr<AbstractShader> m_instanceArrayShader;
+	std::shared_ptr<AbstractShader> m_planetShader;
+	std::shared_ptr<AbstractShader> m_planetByInstanceShader;
 
 	unsigned int m_skyboxTexId;
 	unsigned int m_uboExampleBlock;
@@ -83,6 +96,9 @@ private:
 
 	glm::mat4 m_viewMat;
 	glm::mat4 m_projectionMat;
+
+	glm::mat4* m_rockModelMat;
+	unsigned int m_mountOfRock;
 };
 
 #endif

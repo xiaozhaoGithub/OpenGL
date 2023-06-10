@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
@@ -21,6 +22,9 @@ public:
 	Model(const std::string& path);
 
 	void draw(std::shared_ptr<AbstractShader> shader);
+	void draw(std::shared_ptr<AbstractShader> shader, unsigned int instanceNum);
+
+	void setRuleCb(std::function<void()> rule);
 
 private:
 	void processNode(aiNode* node, const aiScene* scene);

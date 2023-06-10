@@ -91,6 +91,17 @@ namespace DataDef
 		 1.0f, -1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f,  1.0f, 1.0f
 	};
+
+	float quadColorVertices[] = {
+		// 位置          // 颜色
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+		-0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
+
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+		 0.05f,  0.05f,  0.0f, 1.0f, 1.0f
+	};
 }
 namespace DD = DataDef;
 
@@ -783,6 +794,26 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createQuadVAO()
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
 
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createQuadColorVAO()
+{
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::quadColorVertices), DD::quadColorVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 2));
+
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
+	glEnableVertexAttribArray(1);
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPostProcessVAO()
 {
 	auto VAO = createCubeVAO();
@@ -938,6 +969,38 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPointsVAO()
 	glEnableVertexAttribArray(1);
 
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createInstancedVAO()
+{
+	auto VAO = createQuadColorVAO();
+
+	glm::vec2 translations[100];
+	int index = 0;
+	float offset = 0.1f;
+	for (int y = -10; y < 10; y += 2) {
+		for (int x = -10; x < 10; x += 2) {
+			glm::vec2 translation;
+			translation.x = (float)x / 10.0f + offset;
+			translation.y = (float)y / 10.0f + offset;
+			translations[index++] = translation;
+		}
+	}
+
+	unsigned int instanceVBO;
+	glGenBuffers(1, &instanceVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+	glBufferData(GL_ARRAY_BUFFER, 100 * sizeof(glm::vec2), &translations[0], GL_STATIC_DRAW);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(0));
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// 告诉了OpenGL该什么时候更新顶点属性的内容至新一组数据
+	glVertexAttribDivisor(2, 1); // 必须指定渲染更新实例（希望在渲染"1个"新实例的时候更新顶点属性）
+
+	return VAO;
 }
 
 std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()
