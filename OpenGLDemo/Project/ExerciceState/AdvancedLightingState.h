@@ -10,6 +10,7 @@ class AdvancedLightingState : public AbstractExerciceState
 {
 public:
 	AdvancedLightingState();
+	AdvancedLightingState(bool isBlinn);
 	~AdvancedLightingState();
 
 	void draw() override;
@@ -19,6 +20,7 @@ private:
 	void drawFloor();
 
 	std::shared_ptr<AbstractVAO> m_woodFloorVAO;
+	bool m_isBlinn;
 };
 
 #endif

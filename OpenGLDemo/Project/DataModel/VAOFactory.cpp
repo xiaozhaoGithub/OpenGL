@@ -70,6 +70,17 @@ namespace DataDef
 		 5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 	};
 
+	const float floorVertices[] = {
+		// positions          //normal		    // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+		 5.0f, -0.5f,  5.0f,  0.0f, 1.0f, 0.0f,	2.0f, 0.0f,
+		-5.0f, -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f,
+
+		 5.0f, -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 2.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f,
+		 5.0f, -0.5f, -5.0f,  0.0f, 1.0f, 0.0f, 2.0f, 2.0f
+	};
+
 	const float transparentVertices[] = {
 		// positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
 		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
@@ -725,6 +736,14 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPlaneVAO()
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
 
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPlaneVAO(char const* path)
+{
+	auto VAO = createPlaneVAO();
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture(path));
+
+	return VAO;
+}
+
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVPlaneVAO()
 {
 	unsigned int VAO;
@@ -745,9 +764,32 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVPlaneVAO()
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
 
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO()
+{
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(DD::floorVertices), DD::floorVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0); // 顶点属性位置值(location = 0)作为参数，启用顶点属性；顶点属性默认是禁用的。
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO(char const* path)
 {
-	auto VAO = createPlaneVAO();
+	auto VAO = createFloorVAO();
 	VAO->insertTexture(GL_TEXTURE_2D, loadTexture(path));
 
 	return VAO;

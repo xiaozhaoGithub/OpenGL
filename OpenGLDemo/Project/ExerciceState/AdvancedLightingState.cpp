@@ -6,20 +6,27 @@
 #include "CommonDataDef.h"
 #include "TextureHelper.h"
 
+extern GLFWwindow* g_globalWindow;
+
 namespace UCDD = UiCommonDataDef;
 
 AdvancedLightingState::AdvancedLightingState()
 {
 	initTransformMatUniformBlock();
 
-	m_woodFloorVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO("skin/textures/metal.png");
-	//m_woodFloorVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO("skin/textures/wood.png");
+	m_woodFloorVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO("skin/textures/wood.png");
 
 	m_shader = Singleton<ShaderFactory>::instance()->shaderProgram("advanced_light_shader", "ShaderProgram/AdvancedLight/texture_shader.vs", "ShaderProgram/AdvancedLight/texture_shader.fs");
 	m_shader->use();
 	m_shader->setInt("sampler1", 0);
 
 	glEnable(GL_DEPTH_TEST);
+}
+
+AdvancedLightingState::AdvancedLightingState(bool isBlinn)
+	: AdvancedLightingState()
+{
+	m_isBlinn = isBlinn;
 }
 
 AdvancedLightingState::~AdvancedLightingState()
@@ -65,6 +72,7 @@ void AdvancedLightingState::drawFloor()
 	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
 	m_shader->setVec("viewPos", cameraWrapper->cameraPos());
 	m_shader->setVec("lightPos", glm::vec3(0.0f, 0.0f, 0.0f));
+	m_shader->setBool("isBlinn", m_isBlinn);
 
 	m_woodFloorVAO->bindVAO();
 	m_woodFloorVAO->bindTexture();
