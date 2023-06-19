@@ -745,10 +745,10 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createVPlaneVAO()
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
 }
 
-std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO()
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO(char const* path)
 {
 	auto VAO = createPlaneVAO();
-	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/metal.png"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture(path));
 
 	return VAO;
 }

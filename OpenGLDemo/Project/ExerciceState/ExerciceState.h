@@ -32,7 +32,11 @@ public:
 	void setMatrix(const std::string& name, float* value) { m_shader->setMatrix(name, value); }
 
 protected:
+	// TODO 考虑是否只调用一次
+	void initTransformMatUniformBlock();
+
 	std::shared_ptr<AbstractShader> m_shader;
+	unsigned int m_transformMatUbo;
 };
 
 class AbstractTriangleExerciceState : public AbstractExerciceState

@@ -53,7 +53,6 @@ private:
 
 	// helper
 	void setSampler(std::shared_ptr<AbstractShader> shader);
-	void initUniformBlock();
 	void initRockModelMat();
 
 	// callback
@@ -100,7 +99,6 @@ private:
 	std::shared_ptr<AbstractShader> m_planetByInstanceShader;
 
 	unsigned int m_skyboxTexId;
-	unsigned int m_uboExampleBlock;
 
 	std::vector<glm::vec3> m_vegetationPos;
 	std::vector<glm::vec3> m_windowPos;

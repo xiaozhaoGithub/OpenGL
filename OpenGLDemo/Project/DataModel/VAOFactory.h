@@ -64,7 +64,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createAdvancedTargetVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPlaneVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createVPlaneVAO() { return nullptr; }
-	virtual std::shared_ptr<AbstractVAO> createFloorVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createFloorVAO(char const* path) { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createVegetationVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createWindowVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createQuadVAO() { return nullptr; }
@@ -100,7 +100,7 @@ public:
 	std::shared_ptr<AbstractVAO> createAdvancedTargetVAO() override;
 	std::shared_ptr<AbstractVAO> createPlaneVAO() override;
 	std::shared_ptr<AbstractVAO> createVPlaneVAO() override;
-	std::shared_ptr<AbstractVAO> createFloorVAO() override;
+	std::shared_ptr<AbstractVAO> createFloorVAO(char const* path) override;
 	std::shared_ptr<AbstractVAO> createVegetationVAO() override;
 	std::shared_ptr<AbstractVAO> createWindowVAO() override;
 	std::shared_ptr<AbstractVAO> createQuadVAO() override;
