@@ -50,6 +50,7 @@ private:
 	void drawInstanceByArray();
 	void drawPlanetaryBeltByUniform(); // 2000: 10FPS左右，性能消耗大
 	void drawPlanetaryBeltByInstance(); // 2000: 60FPS, 10w: 47FPS, 100w: 4FPS
+	void drawSingleColorCube();
 
 	// helper
 	void setSampler(std::shared_ptr<AbstractShader> shader);

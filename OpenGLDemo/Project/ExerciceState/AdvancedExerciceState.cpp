@@ -15,7 +15,7 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_controlParam->isMsFramebuffer = true;
 
 	m_cubeVAO = Singleton<TriangleVAOFactory>::instance()->createAdvancedTargetVAO();
-	m_planeVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO("skin/textures/metal.png");
+	m_planeVAO = Singleton<TriangleVAOFactory>::instance()->createPlaneVAO("skin/textures/metal.png");
 	m_vegetationVAO = Singleton<TriangleVAOFactory>::instance()->createVegetationVAO();
 	m_windowVAO = Singleton<TriangleVAOFactory>::instance()->createWindowVAO();
 	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
@@ -174,6 +174,7 @@ void AdvancedExerciceState::draw()
 	drawInstanceByArray();
 	//drawPlanetaryBeltByUniform();
 	drawPlanetaryBeltByInstance();
+	drawSingleColorCube();
 
 	if (m_controlParam->isPostProcess) {
 		if (m_controlParam->isMsFramebuffer) {
@@ -585,6 +586,18 @@ void AdvancedExerciceState::drawPlanetaryBeltByInstance()
 	m_planetByInstanceShader->use();
 	m_planetByInstanceShader->setVec("cameraPos", Singleton<CameraWrapper>::instance()->cameraPos());
 	m_rockModel->draw(m_planetByInstanceShader, m_mountOfRock);
+}
+
+void AdvancedExerciceState::drawSingleColorCube()
+{
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(-1.0f, 0.0f, -3.0f));
+	m_singleColorShader->use();
+	m_singleColorShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+
+	m_cubeVAO->bindVAO();
+	m_cubeVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void AdvancedExerciceState::setSampler(std::shared_ptr<AbstractShader> shader)

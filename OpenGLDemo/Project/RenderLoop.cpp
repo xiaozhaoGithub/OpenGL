@@ -39,6 +39,7 @@ int RenderLoop::exec()
 		return result;
 
 	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_MULTISAMPLE); // 开启多重采样（大多数OpenGL的驱动上，多重采样都是默认启用的）
 	Singleton<CameraWrapper>::instance()->setWindow(g_globalWindow);
 
 	startLoop();
@@ -53,6 +54,7 @@ int RenderLoop::initFramework()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	//glfwWindowHint(GLFW_SAMPLES, 4); // 每个像素4个子采样点, 抗锯齿
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 #ifdef __MAC__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
