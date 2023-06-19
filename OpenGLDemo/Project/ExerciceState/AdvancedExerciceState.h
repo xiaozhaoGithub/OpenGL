@@ -16,10 +16,17 @@
 class AdvancedExerciceState : public AbstractExerciceState
 {
 public:
+	struct ControlParam
+	{
+		bool isPostProcess;
+		bool isMsFramebuffer;
+	};
+
 	AdvancedExerciceState();
 	~AdvancedExerciceState();
 
 	void draw() override;
+	void setControlParam(std::shared_ptr<ControlParam> controlParam);
 
 private:
 	// painter
@@ -28,7 +35,7 @@ private:
 	void drawCube();
 	void drawVegetation();
 	void drawWindow();
-	void drawFramebuffer();
+	void drawFramebuffer(std::shared_ptr<Framebuffer> framebuffer);
 	void drawPostProcessCube();
 	void drawReflectedCube();
 	void drawModel();
@@ -53,6 +60,8 @@ private:
 	void rockModelRuleCb();
 
 private:
+	std::shared_ptr<ControlParam> m_controlParam;
+
 	std::shared_ptr<AbstractVAO> m_cubeVAO;
 	std::shared_ptr<AbstractVAO> m_planeVAO;
 	std::shared_ptr<AbstractVAO> m_vegetationVAO;
@@ -69,6 +78,8 @@ private:
 	std::unique_ptr<Model> m_rockModel;
 
 	std::shared_ptr<Framebuffer> m_sceneFramebuffer;
+	std::shared_ptr<Framebuffer> m_muiltSampleSceneFramebuffer;
+	std::shared_ptr<Framebuffer> m_mediatorSceneFramebuffer;
 
 	std::shared_ptr<AbstractShader> m_depthTestShader; // 深度测试可视化
 	std::shared_ptr<AbstractShader> m_singleColorShader;

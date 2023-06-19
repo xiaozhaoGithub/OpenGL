@@ -10,6 +10,10 @@ namespace UCDD = UiCommonDataDef;
 
 AdvancedExerciceState::AdvancedExerciceState()
 {
+	m_controlParam = std::make_shared<ControlParam>();
+	m_controlParam->isPostProcess = false;
+	m_controlParam->isMsFramebuffer = true;
+
 	m_cubeVAO = Singleton<TriangleVAOFactory>::instance()->createAdvancedTargetVAO();
 	m_planeVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO();
 	m_vegetationVAO = Singleton<TriangleVAOFactory>::instance()->createVegetationVAO();
@@ -26,6 +30,8 @@ AdvancedExerciceState::AdvancedExerciceState()
 	m_rockModel = std::make_unique<Model>("skin/Model/rock/rock.obj");
 
 	m_sceneFramebuffer = FramebufferFactory::createFramebuffer();
+	m_muiltSampleSceneFramebuffer = FramebufferFactory::createFramebuffer(4);
+	m_mediatorSceneFramebuffer = FramebufferFactory::createFramebuffer();
 
 	m_depthTestShader = Singleton<ShaderFactory>::instance()->shaderProgram("depth_test_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/depth_test_shader.fs");
 	m_shader = Singleton<ShaderFactory>::instance()->shaderProgram("cube_texture_shader", "ShaderProgram/Advanced/texture_shader.vs", "ShaderProgram/Advanced/texture_shader.fs");
@@ -116,9 +122,14 @@ AdvancedExerciceState::~AdvancedExerciceState()
 
 void AdvancedExerciceState::draw()
 {
-#ifdef POST_PROCESS
-	m_sceneFramebuffer->bindFramebuffer(); 
-#endif 
+	if (m_controlParam->isPostProcess) {
+		if (m_controlParam->isMsFramebuffer) {
+			m_muiltSampleSceneFramebuffer->bindFramebuffer();
+		}
+		else {
+			m_sceneFramebuffer->bindFramebuffer();
+		}
+	}
 
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -164,9 +175,20 @@ void AdvancedExerciceState::draw()
 	//drawPlanetaryBeltByUniform();
 	drawPlanetaryBeltByInstance();
 
-#ifdef POST_PROCESS
-	drawFramebuffer();
-#endif 
+	if (m_controlParam->isPostProcess) {
+		if (m_controlParam->isMsFramebuffer) {
+			m_muiltSampleSceneFramebuffer->blitFramebuffer(m_mediatorSceneFramebuffer->id());
+			drawFramebuffer(m_mediatorSceneFramebuffer);
+		}
+		else {
+			drawFramebuffer(m_sceneFramebuffer);
+		}
+	}
+}
+
+void AdvancedExerciceState::setControlParam(std::shared_ptr<ControlParam> controlParam)
+{
+	m_controlParam = controlParam;
 }
 
 void AdvancedExerciceState::drawDepthTest()
@@ -646,7 +668,7 @@ void AdvancedExerciceState::rockModelRuleCb()
 	glVertexAttribDivisor(6, 1);
 }
 
-void AdvancedExerciceState::drawFramebuffer()
+void AdvancedExerciceState::drawFramebuffer(std::shared_ptr<Framebuffer> framebuffer)
 {
 	// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -659,8 +681,8 @@ void AdvancedExerciceState::drawFramebuffer()
 
 	m_quadVAO->bindVAO();
 	// 常见问题：绑定纹理时，误以为纹理Id保存在VAO中，应该绑定帧缓冲中的纹理对象渲染
-	m_quadVAO->bindTexture();
-	m_sceneFramebuffer->bindTexture(); // use the color attachment texture as the texture of the quad plane
+	framebuffer->bindTexture(); // use the color attachment texture as the texture of the quad plane
+
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
