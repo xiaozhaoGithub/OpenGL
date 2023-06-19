@@ -9,9 +9,12 @@ LearnOpenGL项目说明
 	Release_64 
 
 组合键切换状态
-清屏	CL
-图形	B1 -> B7
-纹理	C1 -> C7
-光照	E1 -> E5
-模型	F1
+清屏		CL
+图形		B1 -> B7
+纹理		C1 -> C7
+光照		E1 -> E5
+模型		F1
+高级OpenGL	G1
+高级光照	H1
+
 
