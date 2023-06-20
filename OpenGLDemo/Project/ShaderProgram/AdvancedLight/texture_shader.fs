@@ -12,6 +12,7 @@ uniform vec3 viewPos;
 uniform vec3 lightPos;
 uniform sampler2D sampler1;
 uniform bool isBlinn;
+uniform bool isGammaCorrection;
 
 void main()
 {	
@@ -41,7 +42,24 @@ void main()
 	
 	vec3 specularColor = vec3(0.3) * specularFactor;
 	
+	// attenuation 
+	// float maxDistance = 1.5;
+	float distance = length(lightPos - vsIn.fragPos);
+	
+	// 不同情况。不同的衰减效果更好
+	// 真实的物理世界：float attenuation = 1.0 / (distance * distance);
+    float attenuation = 1.0 / (isGammaCorrection ? distance * distance : distance);
+	
+	ambientColor *= attenuation;
+	diffuseColor *= attenuation;
+	specularColor *= attenuation;
+	
 	FragColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
+	
+	if(isGammaCorrection) {
+		float gamma = 2.2;
+		FragColor.rgb = pow(FragColor.rgb, vec3(1.0 / gamma)); // 大多数设备屏幕亮度会以2.2次幂输出，降低亮度
+	}
 }	
 
 

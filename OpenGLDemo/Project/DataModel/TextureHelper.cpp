@@ -12,16 +12,23 @@ unsigned int TextureHelper::loadTexture(char const* path, const TexParam& param)
 	int width, height, nrComponents;
 	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
 	if (data) {
+		GLenum internalformat;
 		GLenum format;
-		if (nrComponents == 1)
+		if (nrComponents == 1) {
+			internalformat = GL_RED;
 			format = GL_RED;
-		else if (nrComponents == 3)
+		}
+		else if (nrComponents == 3) {
+			internalformat = param.internalFormat3;
 			format = GL_RGB;
-		else if (nrComponents == 4)
+		}
+		else if (nrComponents == 4) {
+			internalformat = param.internalFormat4;
 			format = GL_RGBA;
+		}
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D); // 在生成纹理之后调用glGenerateMipmap。这会为当前绑定的纹理自动生成所有需要的多级渐远纹理。
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param.wrapS);

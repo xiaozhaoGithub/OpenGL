@@ -12,7 +12,8 @@ namespace UCDD = UiCommonDataDef;
 
 struct AdvancedLightingStateControlParam
 {
-	bool m_isBlinn = false;
+	bool isBlinn = false;
+	bool isGammaCorrection = false;
 };
 
 AdvancedLightingState::AdvancedLightingState()
@@ -67,7 +68,29 @@ void AdvancedLightingState::draw()
 void AdvancedLightingState::processInput()
 {
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_B) == GLFW_PRESS) {
-		m_controlParam->m_isBlinn = !m_controlParam->m_isBlinn;
+		m_controlParam->isBlinn = !m_controlParam->isBlinn;
+	}
+
+	if (glfwGetKey(g_globalWindow, GLFW_KEY_C) == GLFW_PRESS) {
+		m_controlParam->isGammaCorrection = !m_controlParam->isGammaCorrection;
+
+		// 方法1, 使能gamma校正（丧失一些控制权）
+		//if (m_controlParam->isGammaCorrection) {
+		//	glEnable(GL_FRAMEBUFFER_SRGB);
+		//}
+		//else {
+		//	glDisable(GL_FRAMEBUFFER_SRGB);
+		//}
+
+		// 方法2，每个片段着色器最终颜色输出时（缺点：每个着色器都要处理），获取输出颜色的 1/gamma 次幂
+		m_shader->use();
+		m_shader->setBool("isGammaCorrection", m_controlParam->isGammaCorrection);
+
+		// 方法3，加入后期处理，只需一个片段着色器处理最终颜色输出
+		// TODO
+
+		// sRGB纹理（看到的图像实际以经过gamma校正，设计者实在sRGB空间设计纹理，而不是线性控件，二次校正导致光线太亮）
+		// 解决方式使用sRGB纹理格式（自动把颜色校正线性空间中）
 	}
 }
 
@@ -81,7 +104,7 @@ void AdvancedLightingState::drawFloor()
 	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
 	m_shader->setVec("viewPos", cameraWrapper->cameraPos());
 	m_shader->setVec("lightPos", glm::vec3(0.0f, 0.0f, 0.0f));
-	m_shader->setBool("isBlinn", m_controlParam->m_isBlinn);
+	m_shader->setBool("isBlinn", m_controlParam->isBlinn);
 
 	m_woodFloorVAO->bindVAO();
 	m_woodFloorVAO->bindTexture();

@@ -790,7 +790,16 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO()
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createFloorVAO(char const* path)
 {
 	auto VAO = createFloorVAO();
-	VAO->insertTexture(GL_TEXTURE_2D, loadTexture(path));
+
+	// 因为不是所有纹理都是在sRGB空间中的所以当你把纹理指定为sRGB纹理时要格外小心。
+	// 比如diffuse纹理，这种为物体上色的纹理几乎都是在sRGB空间中的。
+	// 而为了获取光照参数的纹理，像specular贴图和法线贴图几乎都在线性空间中，所以如果你把它们也配置为sRGB纹理的话，光照就坏掉了。指定sRGB纹理时要当心。
+	TexParam param;
+	param.internalFormat3 = GL_SRGB;
+	param.internalFormat4 = GL_SRGB_ALPHA;
+
+	// 指定为以上两种内部sRGB纹理格式其中之一，OpenGL将自动把颜色校正到线性空间中
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture(path, param));
 
 	return VAO;
 }
