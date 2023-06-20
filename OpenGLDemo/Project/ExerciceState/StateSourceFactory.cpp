@@ -34,7 +34,6 @@ StateSourceFactory::StateSourceFactory()
 	m_stateDictionary[{ GLFW_KEY_G, GLFW_KEY_1 }] = []() { return std::make_unique<AdvancedExerciceState>(); };
 	
 	m_stateDictionary[{ GLFW_KEY_H, GLFW_KEY_1 }] = []() { return std::make_unique<AdvancedLightingState>(); };
-	m_stateDictionary[{ GLFW_KEY_H, GLFW_KEY_2 }] = []() { return std::make_unique<AdvancedLightingState>(true); };
 }
 
 std::unique_ptr<AbstractExerciceState> StateSourceFactory::stateSource(const std::list<int>& keyList)
@@ -44,9 +43,6 @@ std::unique_ptr<AbstractExerciceState> StateSourceFactory::stateSource(const std
 	auto iter = m_stateDictionary.find(keyList);
 	if (iter != m_stateDictionary.end()) {
 		state = m_stateDictionary[keyList]();
-	}
-	else {
-		state = std::make_unique<ClearExerciceState>();
 	}
 
 	return state;
@@ -69,8 +65,10 @@ void StateContext::setPressKeyList(const std::list<int>& keyList)
 		}
 	}
 
-	m_presskeyList = keyList;
-	setState(m_stateFactory->stateSource(keyList));
+	if (auto stateSource = m_stateFactory->stateSource(keyList)) {
+		m_presskeyList = keyList;
+		setState(std::move(stateSource));
+	}
 }
 
 void StateContext::use()

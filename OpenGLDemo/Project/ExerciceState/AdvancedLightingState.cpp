@@ -10,7 +10,13 @@ extern GLFWwindow* g_globalWindow;
 
 namespace UCDD = UiCommonDataDef;
 
+struct AdvancedLightingStateControlParam
+{
+	bool m_isBlinn = false;
+};
+
 AdvancedLightingState::AdvancedLightingState()
+	: m_controlParam(std::unique_ptr<AdvancedLightingStateControlParam>(new AdvancedLightingStateControlParam()))
 {
 	initTransformMatUniformBlock();
 
@@ -23,18 +29,14 @@ AdvancedLightingState::AdvancedLightingState()
 	glEnable(GL_DEPTH_TEST);
 }
 
-AdvancedLightingState::AdvancedLightingState(bool isBlinn)
-	: AdvancedLightingState()
-{
-	m_isBlinn = isBlinn;
-}
-
 AdvancedLightingState::~AdvancedLightingState()
 {
 }
 
 void AdvancedLightingState::draw()
 {
+	processInput();
+
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
@@ -62,6 +64,13 @@ void AdvancedLightingState::draw()
 	drawFloor();
 }
 
+void AdvancedLightingState::processInput()
+{
+	if (glfwGetKey(g_globalWindow, GLFW_KEY_B) == GLFW_PRESS) {
+		m_controlParam->m_isBlinn = !m_controlParam->m_isBlinn;
+	}
+}
+
 void AdvancedLightingState::drawFloor()
 {
 	auto cameraWrapper = Singleton<CameraWrapper>::instance();
@@ -72,7 +81,7 @@ void AdvancedLightingState::drawFloor()
 	m_shader->setMatrix("modelMat", glm::value_ptr(modelMat));
 	m_shader->setVec("viewPos", cameraWrapper->cameraPos());
 	m_shader->setVec("lightPos", glm::vec3(0.0f, 0.0f, 0.0f));
-	m_shader->setBool("isBlinn", m_isBlinn);
+	m_shader->setBool("isBlinn", m_controlParam->m_isBlinn);
 
 	m_woodFloorVAO->bindVAO();
 	m_woodFloorVAO->bindTexture();

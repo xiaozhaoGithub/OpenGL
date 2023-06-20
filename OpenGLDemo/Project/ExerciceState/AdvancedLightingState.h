@@ -6,21 +6,23 @@
 #include "ExerciceState.h"
 #include "FramebufferFactory.h"
 
+struct AdvancedLightingStateControlParam;
 class AdvancedLightingState : public AbstractExerciceState
 {
 public:
 	AdvancedLightingState();
-	AdvancedLightingState(bool isBlinn);
 	~AdvancedLightingState();
 
 	void draw() override;
 
 private:
+	void processInput();
 	// painter
 	void drawFloor();
 
 	std::shared_ptr<AbstractVAO> m_woodFloorVAO;
-	bool m_isBlinn;
+
+	std::unique_ptr<AdvancedLightingStateControlParam> m_controlParam;
 };
 
 #endif
