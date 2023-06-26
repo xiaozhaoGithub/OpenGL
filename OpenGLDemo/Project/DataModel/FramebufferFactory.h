@@ -44,6 +44,7 @@ public:
 	
 	static std::shared_ptr<Framebuffer> createFramebuffer();
 	static std::shared_ptr<Framebuffer> createFramebuffer(int samples);
+	static std::shared_ptr<Framebuffer> createDepthFb();
 };
 
 

@@ -12,6 +12,7 @@ namespace UCDD = UiCommonDataDef;
 
 struct AdvancedLightingStateControlParam
 {
+	int stateKey = GLFW_KEY_1;
 	bool isBlinn = false;
 	bool isGammaCorrection = false;
 };
@@ -22,10 +23,23 @@ AdvancedLightingState::AdvancedLightingState()
 	initTransformMatUniformBlock();
 
 	m_woodFloorVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO("skin/textures/wood.png");
+	m_cubeVAO = Singleton<TriangleVAOFactory>::instance()->createAdvancedTargetVAO();
+	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
 
-	m_shader = Singleton<ShaderFactory>::instance()->shaderProgram("advanced_light_shader", "ShaderProgram/AdvancedLight/texture_shader.vs", "ShaderProgram/AdvancedLight/texture_shader.fs");
+	auto shaderFactory = Singleton<ShaderFactory>::instance();
+	m_shader = shaderFactory->shaderProgram("advanced_light_shader", "ShaderProgram/AdvancedLight/texture_shader.vs", "ShaderProgram/AdvancedLight/texture_shader.fs");
 	m_shader->use();
 	m_shader->setInt("sampler1", 0);
+
+	m_depthMapShader = shaderFactory->shaderProgram("depth_map", "ShaderProgram/AdvancedLight/depth_map.vs", "ShaderProgram/AdvancedLight/depth_map.fs");
+	m_depthMapShader->use();
+	m_depthMapShader->setInt("sampler1", 0);
+
+	m_debugDepthShader = shaderFactory->shaderProgram("debug_depth_shader", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/debug_depth_shader.fs");
+	m_debugDepthShader->use();
+	m_debugDepthShader->setInt("depthMap", 0);
+
+	m_depthMapFb = FramebufferFactory::createDepthFb();
 
 	glEnable(GL_DEPTH_TEST);
 }
@@ -62,11 +76,28 @@ void AdvancedLightingState::draw()
 
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	drawFloor();
+	switch (m_controlParam->stateKey) {
+	case GLFW_KEY_1: {
+		drawFloor();
+		break;
+	}
+	case GLFW_KEY_2: {
+		drawDepthMap();
+		break;
+	}
+	default:
+		break;
+	}
 }
 
 void AdvancedLightingState::processInput()
 {
+	for (int key = GLFW_KEY_1; key <= GLFW_KEY_9; key++) {
+		if (glfwGetKey(g_globalWindow, key) == GLFW_PRESS) {
+			m_controlParam->stateKey = key;
+		}
+	}
+
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_B) == GLFW_PRESS) {
 		m_controlParam->isBlinn = !m_controlParam->isBlinn;
 	}
@@ -109,6 +140,73 @@ void AdvancedLightingState::drawFloor()
 	m_woodFloorVAO->bindVAO();
 	m_woodFloorVAO->bindTexture();
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void AdvancedLightingState::drawCube(std::shared_ptr<AbstractShader> shader)
+{
+	m_cubeVAO->bindVAO();
+	m_cubeVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void AdvancedLightingState::drawDepthMap()
+{
+	// light space mat
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+
+	float nearPlane = 1.0f;
+	float farPlane = 7.5f;
+
+	auto lightViewMat = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	auto lightProjMat = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+
+	m_depthMapShader->use();
+	m_depthMapShader->setMatrix("lightViewMat", glm::value_ptr(lightViewMat));
+	m_depthMapShader->setMatrix("lightProjMat", glm::value_ptr(lightProjMat));
+
+	// 1.渲染深度贴图，是从光的透视图里渲染的深度纹理，用它计算阴影
+	// 阴影贴图经常和我们原来渲染的场景（通常是窗口分辨率）有着不同的分辨率，我们需要改变视口（viewport）的参数以适应阴影贴图的尺寸。
+	// 如果我们忘了更新视口参数，最后的深度贴图要么太小要么就不完整。
+	glViewport(0, 0, UCDD::kShadowWidth, UCDD::kShadowHeight);
+	m_depthMapFb->bindFramebuffer();
+	glClear(GL_DEPTH_BUFFER_BIT); // 深度帧缓冲清理深度缓冲
+
+	drawFloor();
+
+	m_depthMapShader->use();
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(0.0f, 1.5f, 0.0));
+	modelMat = glm::scale(modelMat, glm::vec3(0.5f));
+	m_depthMapShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	drawCube(m_depthMapShader);
+
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(2.0f, 0.0f, 1.0));
+	modelMat = glm::scale(modelMat, glm::vec3(0.5f));
+	m_depthMapShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	drawCube(m_depthMapShader);
+
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(-1.0f, 0.0f, 2.0));
+	modelMat = glm::rotate(modelMat, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	modelMat = glm::scale(modelMat, glm::vec3(0.25f));
+	m_depthMapShader->setMatrix("modelMat", glm::value_ptr(modelMat));
+	drawCube(m_depthMapShader);
+	
+	// reset viewport
+	glViewport(0, 0, UCDD::kViewportWidth, UCDD::kViewportHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// 2.使用深度贴图渲染场景
+	m_debugDepthShader->use();
+	m_debugDepthShader->setFloat("nearPlane", nearPlane);
+	m_debugDepthShader->setFloat("farPlane", farPlane);
+
+	m_quadVAO->bindVAO();
+	m_depthMapFb->bindTexture();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
 }
 
 

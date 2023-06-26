@@ -4,6 +4,8 @@ namespace UiCommonDataDef
 {
 	const int kViewportWidth = 1200;
 	const int kViewportHeight = 800;
+	const int kShadowWidth = 1024;
+	const int kShadowHeight = 1024;
 }
 
 namespace ExerciceStateCommonDataDef

@@ -116,6 +116,41 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(int samples)
 	return std::make_shared<MuiltSampleFramebuffer>(fbo, colorbufferTexId);
 }
 
+std::shared_ptr<Framebuffer> FramebufferFactory::createDepthFb()
+{
+	unsigned int fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	// 1.纹理附件
+	unsigned int texturId;
+	glGenTextures(1, &texturId);
+	glBindTexture(GL_TEXTURE_2D, texturId);
+
+	// 深度贴图分辨率1024 * 1024
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, UCDD::kShadowWidth, UCDD::kShadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	
+	// 环绕方式默认是GL_REPEAT，取到的是屏幕另一边的像素，而另一边的像素本不应该对中心像素产生影响，这可能会在屏幕边缘产生很奇怪的条纹
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// 附加到帧缓冲上
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texturId, 0);
+
+	// 无颜色缓冲的帧缓冲是不完整的，需要特别指明
+	glReadBuffer(GL_NONE);
+	glDrawBuffer(GL_NONE);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer is not complete!" << std::endl;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return std::make_shared<Framebuffer>(fbo, texturId);
+}
+
 void MuiltSampleFramebuffer::blitFramebuffer(unsigned int targetFbo)
 {
 	// 类型后缀：_FRAMEBUFFER
