@@ -787,7 +787,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createAdvancedTargetVAO()
 std::shared_ptr<AbstractVAO> TriangleVAOFactory::createTexCubeVAO()
 {
 	auto VAO = createNormalCubeVAO();
-	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/wood.jpg"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/wood.png"));
 
 	return VAO;
 }
