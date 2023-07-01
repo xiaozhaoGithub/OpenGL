@@ -315,6 +315,7 @@ void AdvancedLightingState::drawShadow()
 
 	auto lightViewMat = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	auto lightProjMat = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+	// auto lightProjMat = glm::perspective(glm::radians(45.0f), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, nearPlane, farPlane);
 	auto lightSpaceMat = lightProjMat * lightViewMat;
 
 	// 1.渲染深度贴图，是从光的透视图里渲染的深度纹理，用它计算阴影
