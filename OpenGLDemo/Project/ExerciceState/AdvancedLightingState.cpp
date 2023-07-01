@@ -216,6 +216,58 @@ void AdvancedLightingState::drawDepthMap()
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
 }
 
+void AdvancedLightingState::drawSceneToDepthMap(std::shared_ptr<AbstractShader> shader)
+{
+	// light space mat
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+
+	float nearPlane = 1.0f;
+	float farPlane = 7.5f;
+
+	auto lightViewMat = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	auto lightProjMat = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+
+	shader->use();
+	shader->setMatrix("lightSpaceMat", lightProjMat * lightViewMat);
+
+	// 1.渲染深度贴图，是从光的透视图里渲染的深度纹理，用它计算阴影
+	// 阴影贴图经常和我们原来渲染的场景（通常是窗口分辨率）有着不同的分辨率，我们需要改变视口（viewport）的参数以适应阴影贴图的尺寸。
+	// 如果我们忘了更新视口参数，最后的深度贴图要么太小要么就不完整。
+	glViewport(0, 0, UCDD::kShadowWidth, UCDD::kShadowHeight);
+	m_depthMapFb->bindFramebuffer();
+	glClear(GL_DEPTH_BUFFER_BIT); // 深度帧缓冲清理深度缓冲
+
+	drawFloor(shader);
+
+	// 使用正面剔除，可以使深度贴图的深度值（即最近的深度值）变大，大到边缘点，确保阴影更准确
+	// 接近阴影的物体仍然会出现不正确的效果。必须考虑到何时使用正面剔除对物体才有意义。不过使用普通的偏移值通常就能避免peter panning。
+	// 因使用合适的计算偏移方式，此处先不使用正面剔除（阴影与物体交汇处仍存在问题）
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_FRONT);
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(0.0f, 1.5f, 0.0));
+	modelMat = glm::scale(modelMat, glm::vec3(0.5f));
+	shader->setMatrix("modelMat", modelMat);
+	drawCube();
+
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(2.0f, 0.0f, 1.0));
+	modelMat = glm::scale(modelMat, glm::vec3(0.5f));
+	shader->setMatrix("modelMat", modelMat);
+	drawCube();
+
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, glm::vec3(-1.0f, 0.0f, 2.0));
+	modelMat = glm::rotate(modelMat, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	modelMat = glm::scale(modelMat, glm::vec3(0.25f));
+	shader->setMatrix("modelMat", modelMat);
+	drawCube();
+
+	//glDisable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
+}
+
 void AdvancedLightingState::drawScene(std::shared_ptr<AbstractShader> shader)
 {
 	shader->use();
@@ -258,10 +310,7 @@ void AdvancedLightingState::drawShadow()
 
 	auto lightViewMat = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	auto lightProjMat = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
-
-	m_depthMapShader->use();
 	auto lightSpaceMat = lightProjMat * lightViewMat;
-	m_depthMapShader->setMatrix("lightSpaceMat", lightSpaceMat);
 
 	// 1.渲染深度贴图，是从光的透视图里渲染的深度纹理，用它计算阴影
 	// 阴影贴图经常和我们原来渲染的场景（通常是窗口分辨率）有着不同的分辨率，我们需要改变视口（viewport）的参数以适应阴影贴图的尺寸。
@@ -270,7 +319,7 @@ void AdvancedLightingState::drawShadow()
 	m_depthMapFb->bindFramebuffer();
 	glClear(GL_DEPTH_BUFFER_BIT); // 深度帧缓冲清理深度缓冲
 
-	drawScene(m_depthMapShader);
+	drawSceneToDepthMap(m_depthMapShader);
 
 	// reset viewport
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

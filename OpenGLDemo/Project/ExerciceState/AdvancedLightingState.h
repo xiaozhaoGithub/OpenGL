@@ -22,6 +22,7 @@ private:
 	void drawFloor(std::shared_ptr<AbstractShader>);
 	void drawCube();
 	void drawDepthMap();
+	void drawSceneToDepthMap(std::shared_ptr<AbstractShader>);
 
 	void drawScene(std::shared_ptr<AbstractShader>);
 	void drawShadow();
