@@ -237,7 +237,12 @@ void AdvancedLightingState::drawSceneToDepthMap(std::shared_ptr<AbstractShader> 
 	m_depthMapFb->bindFramebuffer();
 	glClear(GL_DEPTH_BUFFER_BIT); // 深度帧缓冲清理深度缓冲
 
-	drawFloor(shader);
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	shader->setMatrix("modelMat", modelMat);
+
+	m_woodFloorVAO->bindVAO();
+	m_woodFloorVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	// 使用正面剔除，可以使深度贴图的深度值（即最近的深度值）变大，大到边缘点，确保阴影更准确
 	// 接近阴影的物体仍然会出现不正确的效果。必须考虑到何时使用正面剔除对物体才有意义。不过使用普通的偏移值通常就能避免peter panning。
@@ -245,7 +250,7 @@ void AdvancedLightingState::drawSceneToDepthMap(std::shared_ptr<AbstractShader> 
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_FRONT);
 
-	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::mat4(1.0f);
 	modelMat = glm::translate(modelMat, glm::vec3(0.0f, 1.5f, 0.0));
 	modelMat = glm::scale(modelMat, glm::vec3(0.5f));
 	shader->setMatrix("modelMat", modelMat);

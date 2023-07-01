@@ -32,7 +32,13 @@ float calcShadow(vec4 lightSpaceFragPos, float bias)
 	// 4. 当前深度值
 	float curDepth = projCoords.z;
 	
-	float shadow = curDepth - bias > closestDepth ? 1.0 : 0.0;
+	float shadow;
+	if(curDepth > 1.0) {
+		shadow = 0.0; // 当超出光锥范围，投影坐标z > 0，即当前深度值大于0，这个不设为阴影
+	}
+	else {
+		shadow = curDepth - bias > closestDepth ? 1.0 : 0.0;
+	}
 	
 	return shadow;
 }
