@@ -43,6 +43,40 @@ float calcShadow(vec4 lightSpaceFragPos, float bias)
 	return shadow;
 }
 
+float calcPcfShadow(vec4 lightSpaceFragPos, float bias)
+{
+	// 1. gl_Postion内置变量，由顶点着色器输出时，自动透视除法，而lightSpaceFragPos不会
+	vec3 projCoords = lightSpaceFragPos.xyz / lightSpaceFragPos.w;
+	
+	// 2. 透视除法后，为标准设备化坐标（NDC: 范围-1，1），需变化到深度值范围（0，1）进行比较
+	projCoords = projCoords * 0.5 + 0.5;
+	
+	// 3. 获取最近的深度值（深度贴图保存的深度值）
+	float closestDepth = texture(shadowMap, projCoords.xy).r; // 深度为单通道，取r (rgba)
+	
+	// 4. 当前深度值
+	float curDepth = projCoords.z;
+	
+	if(curDepth > 1.0) {
+		return 0.0; // 当超出光锥范围，投影坐标z > 0，即当前深度值大于0，这个不设为阴影
+	}
+	
+	// PCF(柔和阴影)
+	float shadow = 0.0;
+
+	vec2 texelSize = 1.0 / textureSize(shadowMap, 0); // 单个纹素大小，0级mipmap的vec2类型的宽和高
+	for(int x = -1; x <= 1; x++) {
+		for(int y = -1; y <= 1; y++) {
+			vec2 offset = vec2(x, y) * texelSize;
+			float pcfClosestDepth = texture(shadowMap, projCoords.xy + offset).r;
+			shadow += curDepth - bias > pcfClosestDepth ? 1.0 : 0.0;
+		}
+	}
+	shadow /= 9.0;
+	
+	return shadow;
+}
+
 void main()
 {	
 	vec3 texColor = texture(diffuseTexture, vsIn.texCoords).rgb;
@@ -77,7 +111,7 @@ void main()
 	
 	// attenuation 
 	// float maxDistance = 1.5;
-	float distance = length(lightPos - vsIn.fragPos);
+	// float distance = length(lightPos - vsIn.fragPos);
 	
 	// 不同情况。不同的衰减效果更好
 	// 真实的物理世界：float attenuation = 1.0 / (distance * distance);
@@ -97,7 +131,8 @@ void main()
 	// 像地板这样的表面几乎与光源垂直，得到的偏移就很小，而比如立方体的侧面这种表面得到的偏移就更大
 	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005); // 越接近垂直，dot越大，偏移越小
 	
-	float shadow = calcShadow(vsIn.lightSpaceFragPos, bias);
+	// float shadow = calcShadow(vsIn.lightSpaceFragPos, bias);
+	float shadow = calcPcfShadow(vsIn.lightSpaceFragPos, bias);
 	vec3 lighting = (ambientColor + (1.0 - shadow) * (diffuseColor + specularColor)) * texColor;
 	
 	FragColor = vec4(lighting, 1.0);
