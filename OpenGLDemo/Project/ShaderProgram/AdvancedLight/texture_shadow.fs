@@ -18,7 +18,7 @@ uniform sampler2D shadowMap;
 uniform bool isBlinn;
 uniform bool isGammaCorrection;
 
-float calcShadow(vec4 lightSpaceFragPos)
+float calcShadow(vec4 lightSpaceFragPos, float bias)
 {
 	// 1. gl_Postion内置变量，由顶点着色器输出时，自动透视除法，而lightSpaceFragPos不会
 	vec3 projCoords = lightSpaceFragPos.xyz / lightSpaceFragPos.w;
@@ -32,7 +32,7 @@ float calcShadow(vec4 lightSpaceFragPos)
 	// 4. 当前深度值
 	float curDepth = projCoords.z;
 	
-	float shadow = curDepth > closestDepth ? 1.0 : 0.0;
+	float shadow = curDepth - bias > closestDepth ? 1.0 : 0.0;
 	
 	return shadow;
 }
@@ -83,7 +83,15 @@ void main()
 	// specularColor *= attenuation;
 	
 	// shadow 阴影：1.0 
-	float shadow = calcShadow(vsIn.lightSpaceFragPos);
+	
+	// 解决阴影失真
+	// 方法1
+	// float bias = 0.005; 
+	// 方法2(效果更好，依赖光源与法线)
+	// 像地板这样的表面几乎与光源垂直，得到的偏移就很小，而比如立方体的侧面这种表面得到的偏移就更大
+	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005); // 越接近垂直，dot越大，偏移越小
+	
+	float shadow = calcShadow(vsIn.lightSpaceFragPos, bias);
 	vec3 lighting = (ambientColor + (1.0 - shadow) * (diffuseColor + specularColor)) * texColor;
 	
 	FragColor = vec4(lighting, 1.0);
