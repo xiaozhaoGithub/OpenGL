@@ -147,6 +147,11 @@ void AbstractShader::setMatrix(const std::string& name, float* value)
 	glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, value);
 }
 
+void AbstractShader::setMatrix(const std::string& name, glm::mat4 value)
+{
+	glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+}
+
 void AbstractShader::setUniformBlockBinding(const std::string& name, unsigned int value)
 {
 	glUniformBlockBinding(m_id, glGetUniformBlockIndex(m_id, name.c_str()), value);

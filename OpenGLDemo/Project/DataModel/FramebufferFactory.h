@@ -20,6 +20,7 @@ public:
 	 */
 	void bindFramebuffer();
 	void bindTexture();
+	void bindTexture(unsigned int index);
 
 	virtual void blitFramebuffer(unsigned int targetFbo) {};
 

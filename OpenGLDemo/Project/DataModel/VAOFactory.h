@@ -61,7 +61,9 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createTargetVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createLightMapTargetVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createCubeVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createNormalCubeVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createAdvancedTargetVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createTexCubeVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPlaneVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPlaneVAO(char const* path) { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createVPlaneVAO() { return nullptr; }
@@ -99,7 +101,9 @@ public:
 	std::shared_ptr<AbstractVAO> createTargetVAO() override;
 	std::shared_ptr<AbstractVAO> createLightMapTargetVAO() override;
 	std::shared_ptr<AbstractVAO> createCubeVAO() override;
+	std::shared_ptr<AbstractVAO> createNormalCubeVAO() override;
 	std::shared_ptr<AbstractVAO> createAdvancedTargetVAO() override;
+	std::shared_ptr<AbstractVAO> createTexCubeVAO() override;
 	std::shared_ptr<AbstractVAO> createPlaneVAO() override;
 	std::shared_ptr<AbstractVAO> createPlaneVAO(char const* path) override;
 	std::shared_ptr<AbstractVAO> createVPlaneVAO() override;

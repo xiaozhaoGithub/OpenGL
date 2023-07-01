@@ -20,6 +20,12 @@ void Framebuffer::bindTexture()
 	glBindTexture(GL_TEXTURE_2D, m_texId);
 }
 
+void Framebuffer::bindTexture(unsigned int index)
+{
+	glActiveTexture(index);
+	glBindTexture(GL_TEXTURE_2D, m_texId);
+}
+
 std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer()
 {
 	unsigned int fbo;

@@ -17,12 +17,18 @@ public:
 
 private:
 	void processInput();
+
 	// painter
-	void drawFloor();
-	void drawCube(std::shared_ptr<AbstractShader>);
+	void drawFloor(std::shared_ptr<AbstractShader>);
+	void drawCube();
 	void drawDepthMap();
 
+	void drawScene(std::shared_ptr<AbstractShader>);
+	void drawShadow();
+
 private:
+	std::shared_ptr<CameraWrapper> m_cameraWrapper;
+
 	std::unique_ptr<AdvancedLightingStateControlParam> m_controlParam;
 
 	std::shared_ptr<AbstractVAO> m_woodFloorVAO;
@@ -31,6 +37,7 @@ private:
 
 	std::shared_ptr<AbstractShader> m_depthMapShader;
 	std::shared_ptr<AbstractShader> m_debugDepthShader;
+	std::shared_ptr<AbstractShader> m_shadowShader;
 
 	std::shared_ptr<Framebuffer> m_depthMapFb;
 };
