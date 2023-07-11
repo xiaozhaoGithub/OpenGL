@@ -26,6 +26,12 @@ void Framebuffer::bindTexture(unsigned int index)
 	glBindTexture(GL_TEXTURE_2D, m_texId);
 }
 
+void Framebuffer::bindTexture(unsigned int type, unsigned int index)
+{
+	glActiveTexture(index);
+	glBindTexture(type, m_texId);
+}
+
 std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer()
 {
 	unsigned int fbo;
@@ -151,6 +157,49 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createDepthFb()
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texturId, 0);
 
 	// 无颜色缓冲的帧缓冲是不完整的，需要特别指明
+	glReadBuffer(GL_NONE);
+	glDrawBuffer(GL_NONE);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer is not complete!" << std::endl;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return std::make_shared<Framebuffer>(fbo, texturId);
+}
+
+std::shared_ptr<Framebuffer> FramebufferFactory::createCubeMapDepthFb()
+{
+	unsigned int fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	// 1.纹理附件
+	unsigned int texturId;
+	glGenTextures(1, &texturId);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texturId);
+
+	// 深度贴图分辨率1024 * 1024
+	for (unsigned int i = GL_TEXTURE_CUBE_MAP_POSITIVE_X; i <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; ++i) {
+		glTexImage2D(i, 0, GL_DEPTH_COMPONENT, UCDD::kShadowWidth, UCDD::kShadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	}
+
+	// 当采样深度贴图，光投影矩阵范围（-1，1）外，即大于1的坐标将都是阴影
+	// 解决：通过限制边界值，当采样到深度贴图时，最近的深度值为1：当前深度均小于1，所以阴影值计算为0（rgba中r = 1.0）
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// 附加到帧缓冲上
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texturId, 0);
+
+	// 无颜色缓冲的帧缓冲是不完整的，需要显示说明
 	glReadBuffer(GL_NONE);
 	glDrawBuffer(GL_NONE);
 

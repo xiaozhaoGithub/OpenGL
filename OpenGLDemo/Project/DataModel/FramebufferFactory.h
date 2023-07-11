@@ -21,6 +21,7 @@ public:
 	void bindFramebuffer();
 	void bindTexture();
 	void bindTexture(unsigned int index);
+	void bindTexture(unsigned int type, unsigned int index);
 
 	virtual void blitFramebuffer(unsigned int targetFbo) {};
 
@@ -46,6 +47,7 @@ public:
 	static std::shared_ptr<Framebuffer> createFramebuffer();
 	static std::shared_ptr<Framebuffer> createFramebuffer(int samples);
 	static std::shared_ptr<Framebuffer> createDepthFb();
+	static std::shared_ptr<Framebuffer> createCubeMapDepthFb();
 };
 
 

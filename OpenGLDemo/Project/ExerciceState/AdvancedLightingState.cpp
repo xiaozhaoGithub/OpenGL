@@ -15,6 +15,7 @@ struct AdvancedLightingStateControlParam
 	int stateKey = GLFW_KEY_1;
 	bool isBlinn = false;
 	bool isGammaCorrection = false;
+	bool isShowShadow = false;
 };
 
 AdvancedLightingState::AdvancedLightingState()
@@ -46,7 +47,16 @@ AdvancedLightingState::AdvancedLightingState()
 	m_shadowShader->setInt("diffuseTexture", 0);
 	m_shadowShader->setInt("shadowMap", 1);
 
+	m_depthCubeMapShader = shaderFactory->shaderProgram("depth_cube_map", "ShaderProgram/AdvancedLight/omnidirection_depth_map.vs", "ShaderProgram/AdvancedLight/omnidirection_depth_map.gs", "ShaderProgram/AdvancedLight/omnidirection_depth_map.fs");
+	m_omnidirectionShadowShader = shaderFactory->shaderProgram("omnidirection_shadow", "ShaderProgram/AdvancedLight/omnidirection_shadow.vs", "ShaderProgram/AdvancedLight/omnidirection_shadow.fs");
+	m_omnidirectionShadowShader->use();
+	m_omnidirectionShadowShader->setInt("diffuseTexture", 0);
+	m_omnidirectionShadowShader->setInt("shadowCubeMap", 1);
+
 	m_depthMapFb = FramebufferFactory::createDepthFb();
+	m_cubeMapDepthFb = FramebufferFactory::createCubeMapDepthFb();
+	
+	m_woodTexId = TextureHelper::loadTexture("skin/textures/wood.png");
 
 	glEnable(GL_DEPTH_TEST);
 }
@@ -95,6 +105,10 @@ void AdvancedLightingState::draw()
 		drawShadow();
 		break;
 	}
+	case GLFW_KEY_4: {
+		drawOmnidirectionShadow();
+		break;
+	}
 	default:
 		break;
 	}
@@ -110,8 +124,8 @@ void AdvancedLightingState::processInput()
 
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_B) == GLFW_PRESS) {
 		m_controlParam->isBlinn = !m_controlParam->isBlinn;
-	}
-
+	}	
+	
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_C) == GLFW_PRESS) {
 		m_controlParam->isGammaCorrection = !m_controlParam->isGammaCorrection;
 
@@ -132,6 +146,10 @@ void AdvancedLightingState::processInput()
 
 		// sRGB纹理（看到的图像实际以经过gamma校正，设计者实在sRGB空间设计纹理，而不是线性控件，二次校正导致光线太亮）
 		// 解决方式使用sRGB纹理格式（自动把颜色校正线性空间中）
+	}
+
+	if (glfwGetKey(g_globalWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		m_controlParam->isShowShadow = !m_controlParam->isShowShadow;
 	}
 }
 
@@ -338,11 +356,99 @@ void AdvancedLightingState::drawShadow()
 	m_shadowShader->setVec("viewPos", m_cameraWrapper->cameraPos());
 	m_shadowShader->setVec("lightPos", lightPos);
 	m_shadowShader->setBool("isBlinn", m_controlParam->isBlinn);
-	m_shadowShader->setBool("isGammaCorrection", m_controlParam->isGammaCorrection);
 
 	m_woodFloorVAO->bindTexture();
 	m_depthMapFb->bindTexture(GL_TEXTURE1);
 	drawScene(m_shadowShader);
+}
+
+void AdvancedLightingState::drawOmnidirectionShadow()
+{
+	float near = 1.0f;
+	float far = 25.0f;
+
+	// 90度我们才能保证视野足够大到可以合适地填满立方体贴图的一个面
+	glm::mat4 projMat = glm::perspective(glm::radians(90.0f), (float)UCDD::kShadowWidth / UCDD::kShadowHeight, near, far);
+
+	glm::vec3 lightPos(0.0f);
+	std::vector<glm::mat4> shadowTransformMats = {
+		projMat * glm::lookAt(lightPos, lightPos + glm::vec3(1.0,0.0,0.0), glm::vec3(0.0,-1.0,0.0)),
+		projMat * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0,0.0,0.0), glm::vec3(0.0,-1.0,0.0)),
+		projMat * glm::lookAt(lightPos, lightPos + glm::vec3(0.0,1.0,0.0), glm::vec3(0.0,0.0,1.0)),
+		projMat * glm::lookAt(lightPos, lightPos + glm::vec3(0.0,-1.0,0.0), glm::vec3(0.0,0.0,-1.0)),
+		projMat * glm::lookAt(lightPos, lightPos + glm::vec3(0.0,0.0,1.0), glm::vec3(0.0,-1.0,0.0)),
+		projMat * glm::lookAt(lightPos, lightPos + glm::vec3(0.0,0.0,-1.0), glm::vec3(0.0,-1.0,0.0))
+	};
+
+	// render cube map depth buffer
+	glViewport(0, 0, UCDD::kShadowWidth, UCDD::kShadowHeight);
+	m_cubeMapDepthFb->bindFramebuffer();
+	glClear(GL_DEPTH_BUFFER_BIT); 
+
+	m_depthCubeMapShader->use();
+	m_depthCubeMapShader->setFloat("farPlane", far);
+	m_depthCubeMapShader->setVec("lightPos", lightPos);
+	for (int i = 0; i < 6; i++) {
+		m_depthCubeMapShader->setMatrix("shadowTransformMats[" + std::to_string(i) + "]", shadowTransformMats[i]);
+	}
+	drawOmnidirectionShadowScene(m_depthCubeMapShader);
+
+	// render scene
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, UCDD::kViewportWidth, UCDD::kViewportHeight);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	m_omnidirectionShadowShader->use();
+	m_omnidirectionShadowShader->setVec("viewPos", m_cameraWrapper->cameraPos());
+	m_omnidirectionShadowShader->setVec("lightPos", lightPos);
+	m_omnidirectionShadowShader->setFloat("farPlane", far);
+	m_omnidirectionShadowShader->setBool("isBlinn", m_controlParam->isBlinn);
+	m_omnidirectionShadowShader->setBool("isShowShadow", m_controlParam->isShowShadow);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_woodTexId);
+	m_cubeMapDepthFb->bindTexture(GL_TEXTURE_CUBE_MAP, GL_TEXTURE1);
+	drawOmnidirectionShadowScene(m_omnidirectionShadowShader);
+}
+
+void AdvancedLightingState::drawOmnidirectionShadowScene(std::shared_ptr<AbstractShader> shader)
+{
+	// room cube
+	glm::mat4 model(1.0f);
+	model = glm::scale(model, glm::vec3(5.0f));
+	shader->setMatrix("modelMat", model);
+	glDisable(GL_CULL_FACE); // Note that we disable culling here since we render 'inside' the cube instead of the usual 'outside' which throws off the normal culling methods.
+	shader->setBool("reverseNormals", true); // A small little hack to invert normals when drawing cube from the inside so lighting still works.
+	drawCube();
+	shader->setBool("reverseNormals", false);// And of course disable it
+	glEnable(GL_CULL_FACE);
+
+	// cubes
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(4.0f, -3.5f, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader->setMatrix("modelMat", model);
+	drawCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
+	model = glm::scale(model, glm::vec3(0.75f));
+	shader->setMatrix("modelMat", model);
+	drawCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.0f, -1.0f, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader->setMatrix("modelMat", model);
+	drawCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader->setMatrix("modelMat", model);
+	drawCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.5f, 2.0f, -3.0));
+	model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	model = glm::scale(model, glm::vec3(0.75f));
+	drawCube();
 }
 
 
