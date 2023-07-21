@@ -13,7 +13,7 @@ Model::Model(const std::string& path)
 	clock_t start_time = clock();
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	if (!scene || !scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) {
 		std::cout << "Model loaded failed! error info: " << importer.GetErrorString() << std::endl;
 		return;
@@ -95,6 +95,14 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 		else {
 			vertexsData.texCoords.emplace_back(0.0f, 0.0f);
 		}
+
+		if (mesh->HasTangentsAndBitangents()) {
+			vertexsData.tangents.emplace_back(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+		}
+		else {
+			vertexsData.tangents.emplace_back(glm::vec3());
+		}
+
 #else
 		Vertex vertex;
 		vertex.position.x = mesh->mVertices[i].x;
@@ -118,6 +126,9 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 		}
 
 		// tangent
+		if (mesh->HasTangentsAndBitangents()) {
+			vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+		}
 
 		// bitangent
 
@@ -147,6 +158,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene * scene)
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
 		// 3. normal maps
+		// wavefront的模型格式（.obj）导出的法线贴图有点不一样，Assimp的aiTextureType_NORMAL并不会加载它的法线贴图，而aiTextureType_HEIGHT却能
 		std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
 		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 

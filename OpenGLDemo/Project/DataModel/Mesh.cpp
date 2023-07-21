@@ -39,15 +39,18 @@ void Mesh::initMesh()
 	size_t positionsBufSize = sizeof(glm::vec3) * m_vertexsData.positions.size();
 	size_t normalsBufSize = sizeof(glm::vec3) * m_vertexsData.normals.size();
 	size_t texCoordsBufSize = sizeof(glm::vec2) * m_vertexsData.texCoords.size();
+	size_t tangentsBufSize = sizeof(glm::vec3) * m_vertexsData.tangents.size();
 	glBufferData(GL_ARRAY_BUFFER, positionsBufSize + normalsBufSize + texCoordsBufSize, nullptr, GL_STATIC_DRAW);
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, positionsBufSize, &m_vertexsData.positions[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, positionsBufSize, normalsBufSize, &m_vertexsData.normals[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, positionsBufSize + normalsBufSize, texCoordsBufSize, &m_vertexsData.texCoords[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, positionsBufSize + normalsBufSize + texCoordsBufSize, tangentsBufSize, &m_vertexsData.tangents[0]);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(positionsBufSize));
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(positionsBufSize + normalsBufSize));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(positionsBufSize + normalsBufSize + texCoordsBufSize));
 #else
 	// 从第一个元素的地址开始
 	glBufferData(GL_ARRAY_BUFFER, m_vertexs.size() * sizeof(Vertex), &m_vertexs[0], GL_STATIC_DRAW);
@@ -57,10 +60,12 @@ void Mesh::initMesh()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, normal)));
 	offset = offsetof(Vertex, texCoords);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, texCoords)));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, tangent)));
 #endif
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
 
 	glBindVertexArray(0);
 }
