@@ -80,6 +80,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createPointVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPointsVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createInstancedVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createNormalMapVAO() { return nullptr; }
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory
@@ -120,6 +121,7 @@ public:
 	std::shared_ptr<AbstractVAO> createPointVAO() override;
 	std::shared_ptr<AbstractVAO> createPointsVAO() override;
 	std::shared_ptr<AbstractVAO> createInstancedVAO() override;
+	std::shared_ptr<AbstractVAO> createNormalMapVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory

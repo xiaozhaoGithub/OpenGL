@@ -28,6 +28,7 @@ AdvancedLightingState::AdvancedLightingState()
 	m_woodFloorVAO = Singleton<TriangleVAOFactory>::instance()->createFloorVAO("skin/textures/wood.png");
 	m_cubeVAO = Singleton<TriangleVAOFactory>::instance()->createTexCubeVAO();
 	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
+	m_normalMapVAO = Singleton<TriangleVAOFactory>::instance()->createNormalMapVAO();
 
 	auto shaderFactory = Singleton<ShaderFactory>::instance();
 	m_shader = shaderFactory->shaderProgram("advanced_light_shader", "ShaderProgram/AdvancedLight/texture_shader.vs", "ShaderProgram/AdvancedLight/texture_shader.fs");
@@ -52,6 +53,11 @@ AdvancedLightingState::AdvancedLightingState()
 	m_omnidirectionShadowShader->use();
 	m_omnidirectionShadowShader->setInt("diffuseTexture", 0);
 	m_omnidirectionShadowShader->setInt("shadowCubeMap", 1);
+
+	m_normalMapShader = shaderFactory->shaderProgram("normal_map", "ShaderProgram/AdvancedLight/normal_map.vs", "ShaderProgram/AdvancedLight/normal_map.fs");
+	m_normalMapShader->use();
+	m_normalMapShader->setInt("diffuseMap", 0);
+	m_normalMapShader->setInt("normalMap", 1);
 
 	m_depthMapFb = FramebufferFactory::createDepthFb();
 	m_cubeMapDepthFb = FramebufferFactory::createCubeMapDepthFb();
@@ -107,6 +113,10 @@ void AdvancedLightingState::draw()
 	}
 	case GLFW_KEY_4: {
 		drawOmnidirectionShadow();
+		break;
+	}	
+	case GLFW_KEY_5: {
+		drawNormalMap();
 		break;
 	}
 	default:
@@ -449,6 +459,32 @@ void AdvancedLightingState::drawOmnidirectionShadowScene(std::shared_ptr<Abstrac
 	model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
 	model = glm::scale(model, glm::vec3(0.75f));
 	drawCube();
+}
+
+void AdvancedLightingState::drawNormalMap()
+{
+	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
+	m_normalMapShader->use();
+	m_normalMapShader->setVec("lightPos", lightPos);
+	m_normalMapShader->setVec("viewPos", m_cameraWrapper->cameraPos());
+
+	glm::mat4 modelMat(1.0f);
+	modelMat = glm::rotate(modelMat, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
+	m_normalMapShader->setMatrix("modelMat", modelMat);
+
+	m_normalMapVAO->bindVAO();
+	m_normalMapVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+	// light source
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, lightPos);
+	modelMat = glm::scale(modelMat, glm::vec3(0.1f));
+	m_normalMapShader->setMatrix("modelMat", modelMat);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 
