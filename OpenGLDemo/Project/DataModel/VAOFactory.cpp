@@ -1130,7 +1130,7 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createInstancedVAO()
 	return VAO;
 }
 
-std::shared_ptr<AbstractVAO> TriangleVAOFactory::createNormalMapVAO()
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createTangentVAO()
 {
 	// positions
 	glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
@@ -1215,9 +1215,24 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createNormalMapVAO()
 	glEnableVertexAttribArray(4);
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
 
-	auto VAO = std::shared_ptr<AbstractVAO>(new TriangleVAO(quadVAO));
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(quadVAO));
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createNormalMapVAO()
+{
+	auto VAO = createTangentVAO();
 	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/brickwall.jpg"));
 	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/brickwall_normal.jpg"));
+
+	return VAO;
+}
+
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createParallaxMapVAO()
+{
+	auto VAO = createTangentVAO();
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/bricks2.jpg"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/bricks2_normal.jpg"));
+	VAO->insertTexture(GL_TEXTURE_2D, loadTexture("skin/textures/bricks2_disp.jpg"));
 
 	return VAO;
 }

@@ -16,6 +16,7 @@ struct AdvancedLightingStateControlParam
 	bool isBlinn = false;
 	bool isGammaCorrection = false;
 	bool isShowShadow = false;
+	float heightScale = 0.1f;
 };
 
 AdvancedLightingState::AdvancedLightingState()
@@ -29,6 +30,7 @@ AdvancedLightingState::AdvancedLightingState()
 	m_cubeVAO = Singleton<TriangleVAOFactory>::instance()->createTexCubeVAO();
 	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
 	m_normalMapVAO = Singleton<TriangleVAOFactory>::instance()->createNormalMapVAO();
+	m_parallaxMapVAO = Singleton<TriangleVAOFactory>::instance()->createParallaxMapVAO();
 
 	auto shaderFactory = Singleton<ShaderFactory>::instance();
 	m_shader = shaderFactory->shaderProgram("advanced_light_shader", "ShaderProgram/AdvancedLight/texture_shader.vs", "ShaderProgram/AdvancedLight/texture_shader.fs");
@@ -58,6 +60,13 @@ AdvancedLightingState::AdvancedLightingState()
 	m_normalMapShader->use();
 	m_normalMapShader->setInt("diffuseMap", 0);
 	m_normalMapShader->setInt("normalMap", 1);
+
+	m_parallaxMapShader = shaderFactory->shaderProgram("parallax_map", "ShaderProgram/AdvancedLight/normal_map.vs", "ShaderProgram/AdvancedLight/parallax_map.fs");
+	m_parallaxMapShader->use();
+	m_parallaxMapShader->setInt("diffuseMap", 0);
+	m_parallaxMapShader->setInt("normalMap", 1);
+	m_parallaxMapShader->setInt("depthMap", 2);
+	
 
 	m_depthMapFb = FramebufferFactory::createDepthFb();
 	m_cubeMapDepthFb = FramebufferFactory::createCubeMapDepthFb();
@@ -119,6 +128,10 @@ void AdvancedLightingState::draw()
 		drawNormalMap();
 		break;
 	}
+	case GLFW_KEY_6: {
+		drawParallaxMap();
+		break;
+	}
 	default:
 		break;
 	}
@@ -160,6 +173,20 @@ void AdvancedLightingState::processInput()
 
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		m_controlParam->isShowShadow = !m_controlParam->isShowShadow;
+	}
+
+	if (glfwGetKey(g_globalWindow, GLFW_KEY_Q) == GLFW_PRESS) {
+		if (m_controlParam->heightScale > 0.0f)
+			m_controlParam->heightScale -= 0.0005f;
+		else
+			m_controlParam->heightScale = 0.0f;
+	}
+
+	if (glfwGetKey(g_globalWindow, GLFW_KEY_E) == GLFW_PRESS) {
+		if (m_controlParam->heightScale < 1.0f)
+			m_controlParam->heightScale += 0.0005f;
+		else
+			m_controlParam->heightScale = 1.0f;
 	}
 }
 
@@ -483,6 +510,32 @@ void AdvancedLightingState::drawNormalMap()
 	modelMat = glm::translate(modelMat, lightPos);
 	modelMat = glm::scale(modelMat, glm::vec3(0.1f));
 	m_normalMapShader->setMatrix("modelMat", modelMat);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void AdvancedLightingState::drawParallaxMap()
+{
+	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
+	m_parallaxMapShader->use();
+	m_parallaxMapShader->setVec("lightPos", lightPos);
+	m_parallaxMapShader->setVec("viewPos", m_cameraWrapper->cameraPos());
+	m_parallaxMapShader->setFloat("heightScale", m_controlParam->heightScale);
+
+	glm::mat4 modelMat(1.0f);
+	//modelMat = glm::rotate(modelMat, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
+	m_parallaxMapShader->setMatrix("modelMat", modelMat);
+
+	m_parallaxMapVAO->bindVAO();
+	m_parallaxMapVAO->bindTexture();
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	// light source
+	modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, lightPos);
+	modelMat = glm::scale(modelMat, glm::vec3(0.1f));
+	m_parallaxMapShader->setMatrix("modelMat", modelMat);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }

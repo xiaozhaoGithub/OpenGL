@@ -30,6 +30,7 @@ private:
 	void drawOmnidirectionShadow();
 	void drawOmnidirectionShadowScene(std::shared_ptr<AbstractShader> shader);
 	void drawNormalMap();
+	void drawParallaxMap();
 
 private:
 	std::shared_ptr<CameraWrapper> m_cameraWrapper;
@@ -40,6 +41,7 @@ private:
 	std::shared_ptr<AbstractVAO> m_cubeVAO;
 	std::shared_ptr<AbstractVAO> m_quadVAO;
 	std::shared_ptr<AbstractVAO> m_normalMapVAO;
+	std::shared_ptr<AbstractVAO> m_parallaxMapVAO;
 
 	std::shared_ptr<AbstractShader> m_depthMapShader;
 	std::shared_ptr<AbstractShader> m_debugDepthShader;
@@ -47,6 +49,7 @@ private:
 	std::shared_ptr<AbstractShader> m_depthCubeMapShader;
 	std::shared_ptr<AbstractShader> m_omnidirectionShadowShader;
 	std::shared_ptr<AbstractShader> m_normalMapShader;
+	std::shared_ptr<AbstractShader> m_parallaxMapShader;
 
 	std::shared_ptr<Framebuffer> m_depthMapFb;
 	std::shared_ptr<Framebuffer> m_cubeMapDepthFb;
