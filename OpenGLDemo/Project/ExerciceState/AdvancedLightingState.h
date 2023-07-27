@@ -18,7 +18,10 @@ public:
 private:
 	void processInput();
 
-	// painter
+	// common painter
+	void drawQuad();
+
+	// business painter
 	void drawFloor(std::shared_ptr<AbstractShader> shader);
 	void drawCube();
 	void drawDepthMap();
@@ -31,6 +34,7 @@ private:
 	void drawOmnidirectionShadowScene(std::shared_ptr<AbstractShader> shader);
 	void drawNormalMap();
 	void drawParallaxMap();
+	void drawHdr();
 
 private:
 	std::shared_ptr<CameraWrapper> m_cameraWrapper;
@@ -50,9 +54,12 @@ private:
 	std::shared_ptr<AbstractShader> m_omnidirectionShadowShader;
 	std::shared_ptr<AbstractShader> m_normalMapShader;
 	std::shared_ptr<AbstractShader> m_parallaxMapShader;
+	std::shared_ptr<AbstractShader> m_hdrLightShader;
+	std::shared_ptr<AbstractShader> m_hdrShader;
 
 	std::shared_ptr<Framebuffer> m_depthMapFb;
 	std::shared_ptr<Framebuffer> m_cubeMapDepthFb;
+	std::shared_ptr<Framebuffer> m_floatFb;
 
 	unsigned int m_woodTexId;
 };

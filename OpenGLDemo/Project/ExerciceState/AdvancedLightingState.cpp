@@ -17,6 +17,8 @@ struct AdvancedLightingStateControlParam
 	bool isGammaCorrection = false;
 	bool isShowShadow = false;
 	float heightScale = 0.1f;
+	float exposure = 1.0f;
+	bool isUseHdr = false;
 };
 
 AdvancedLightingState::AdvancedLightingState()
@@ -66,10 +68,21 @@ AdvancedLightingState::AdvancedLightingState()
 	m_parallaxMapShader->setInt("diffuseMap", 0);
 	m_parallaxMapShader->setInt("normalMap", 1);
 	m_parallaxMapShader->setInt("depthMap", 2);
-	
+
+	m_hdrLightShader = shaderFactory->shaderProgram("hdr_light", "ShaderProgram/AdvancedLight/omnidirection_shadow.vs", "ShaderProgram/AdvancedLight/hdr_light.fs");
+	m_hdrLightShader->use();
+	m_hdrLightShader->setInt("diffuseTexture", 0);
+
+	m_hdrShader = shaderFactory->shaderProgram("hdr_quad", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/hdr_quad.fs");
+	m_hdrShader->use();
+	m_hdrShader->setInt("hdrFbTexture", 0);
 
 	m_depthMapFb = FramebufferFactory::createDepthFb();
 	m_cubeMapDepthFb = FramebufferFactory::createCubeMapDepthFb();
+
+	FramebufferFactory::FramebufferParam fbParam;
+	fbParam.internalFormat3 = GL_RGB16F;
+	m_floatFb = FramebufferFactory::createFramebuffer(fbParam);
 	
 	m_woodTexId = TextureHelper::loadTexture("skin/textures/wood.png");
 
@@ -132,6 +145,10 @@ void AdvancedLightingState::draw()
 		drawParallaxMap();
 		break;
 	}
+	case GLFW_KEY_7: {
+		drawHdr();
+		break;
+	}
 	default:
 		break;
 	}
@@ -173,21 +190,33 @@ void AdvancedLightingState::processInput()
 
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		m_controlParam->isShowShadow = !m_controlParam->isShowShadow;
+		m_controlParam->isUseHdr = !m_controlParam->isUseHdr;
 	}
 
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_Q) == GLFW_PRESS) {
-		if (m_controlParam->heightScale > 0.0f)
-			m_controlParam->heightScale -= 0.0005f;
-		else
-			m_controlParam->heightScale = 0.0f;
+		if (m_controlParam->stateKey == GLFW_KEY_6) {
+			m_controlParam->heightScale = m_controlParam->heightScale > 0.0f ? m_controlParam->heightScale - 0.0005f : 0.0f;
+		}
+		else if (m_controlParam->stateKey == GLFW_KEY_7) {
+			m_controlParam->exposure = m_controlParam->exposure > 0.0f ? m_controlParam->exposure - 0.001f : 0.0f;
+		}
 	}
 
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_E) == GLFW_PRESS) {
-		if (m_controlParam->heightScale < 1.0f)
-			m_controlParam->heightScale += 0.0005f;
-		else
-			m_controlParam->heightScale = 1.0f;
+		if (m_controlParam->stateKey == GLFW_KEY_6) {
+			m_controlParam->heightScale = m_controlParam->heightScale < 1.0f ? m_controlParam->heightScale + 0.0005f : 1.0f;
+		}
+		else if (m_controlParam->stateKey == GLFW_KEY_7) {
+			m_controlParam->exposure += 0.001f;
+		}
 	}
+}
+
+void AdvancedLightingState::drawQuad()
+{
+	m_quadVAO->bindVAO();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+	glBindVertexArray(0);
 }
 
 void AdvancedLightingState::drawFloor(std::shared_ptr<AbstractShader> shader)
@@ -540,4 +569,49 @@ void AdvancedLightingState::drawParallaxMap()
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
+void AdvancedLightingState::drawHdr()
+{
+	m_floatFb->bindFramebuffer();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// 暂不考虑效率问题，在此定义数组，方便阅读
+	std::vector<glm::vec3> lightPositions;
+	lightPositions.push_back(glm::vec3(0.0f, 0.0f, 49.5f)); // back light
+	lightPositions.push_back(glm::vec3(-1.4f, -1.9f, 9.0f));
+	lightPositions.push_back(glm::vec3(0.0f, -1.8f, 4.0f));
+	lightPositions.push_back(glm::vec3(0.8f, -1.7f, 6.0f));
+	// colors
+	std::vector<glm::vec3> lightColors;
+	lightColors.push_back(glm::vec3(200.0f, 200.0f, 200.0f));
+	lightColors.push_back(glm::vec3(0.1f, 0.0f, 0.0f));
+	lightColors.push_back(glm::vec3(0.0f, 0.0f, 0.2f));
+	lightColors.push_back(glm::vec3(0.0f, 0.1f, 0.0f));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_woodTexId);
+	// set lighting uniforms
+	m_hdrLightShader->use();
+	for (unsigned int i = 0; i < lightPositions.size(); i++) {
+		m_hdrLightShader->setVec("lights[" + std::to_string(i) + "].position", lightPositions[i]);
+		m_hdrLightShader->setVec("lights[" + std::to_string(i) + "].color", lightColors[i]);
+	}
+
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0f));
+	model = glm::scale(model, glm::vec3(2.5f, 2.5f, 27.5f));
+	m_hdrLightShader->setMatrix("modelMat", model);
+	m_hdrLightShader->setBool("reverseNormals", true);
+	drawCube();
+
+	// 绘制到默认缓冲
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	m_floatFb->bindTexture();
+	m_hdrShader->use();
+	m_hdrShader->setBool("isUseHdr", m_controlParam->isUseHdr);
+	m_hdrShader->setFloat("exposure", m_controlParam->exposure);
+
+	drawQuad();
+}
 
