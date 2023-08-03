@@ -17,19 +17,23 @@ void Framebuffer::bindFramebuffer()
 
 void Framebuffer::bindTexture()
 {
-	glBindTexture(GL_TEXTURE_2D, m_texId);
+	glBindTexture(GL_TEXTURE_2D, m_texIds[0]);
 }
 
-void Framebuffer::bindTexture(unsigned int index)
+void Framebuffer::bindTexture(unsigned int activeTex)
 {
-	glActiveTexture(index);
-	glBindTexture(GL_TEXTURE_2D, m_texId);
+	bindTexture(GL_TEXTURE_2D, activeTex, 0);
 }
 
-void Framebuffer::bindTexture(unsigned int type, unsigned int index)
+void Framebuffer::bindTexture(unsigned int type, unsigned int activeTex)
 {
-	glActiveTexture(index);
-	glBindTexture(type, m_texId);
+	bindTexture(type, activeTex, 0);
+}
+
+void Framebuffer::bindTexture(unsigned int type, unsigned int activeTex, unsigned int index)
+{
+	glActiveTexture(activeTex);
+	glBindTexture(type, m_texIds[index]);
 }
 
 std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const FramebufferParam& param)
@@ -78,6 +82,61 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return std::make_shared<Framebuffer>(fbo, textureColorbuffer);
+}
+
+std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const FramebufferParam& param, int attachNum)
+{
+	unsigned int fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	// 创建附件（纹理或渲染缓冲对象），附件是一个内存位置，它能够作为帧缓冲的一个缓冲
+	// 1.纹理附件
+	unsigned int* colorbuffers = new unsigned int[attachNum];
+	glGenTextures(2, colorbuffers);
+
+	std::vector<unsigned int > attachments;
+	std::vector<unsigned int> texIds;
+
+	for (int i = 0; i < attachNum; i++) {
+		glBindTexture(GL_TEXTURE_2D, colorbuffers[i]);
+
+		// 将维度设置为了屏幕大小（尽管这不是必须的）
+		// 空的纹理，提供给帧缓冲渲染时，再填入颜色缓冲数据
+		glTexImage2D(GL_TEXTURE_2D, 0, param.internalFormat3, UCDD::kViewportWidth, UCDD::kViewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		// 环绕方式默认是GL_REPEAT，取到的是屏幕另一边的像素，而另一边的像素本不应该对中心像素产生影响，这可能会在屏幕边缘产生很奇怪的条纹
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// 附加到帧缓冲上
+		unsigned int attachIndex = GL_COLOR_ATTACHMENT0 + i;
+		glFramebufferTexture2D(GL_FRAMEBUFFER, attachIndex, GL_TEXTURE_2D, colorbuffers[i], 0);
+		attachments.emplace_back(attachIndex);
+		texIds.emplace_back(colorbuffers[i]);
+	}
+	delete[] colorbuffers;
+
+	// 2.渲染缓冲对象附件（原生渲染格式，不做纹理格式转换，更快写入/复制数据的存储介质，通常都是只写，但可从当前绑定的帧缓冲获取像素：glReadPixels）
+	// 通常作为深度和模板附件（大部分时间不需要读取缓冲中的值，即不需要采样）
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, UCDD::kViewportWidth, UCDD::kViewportHeight);// 创建深度和模板渲染缓冲对象
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	//glBindRenderbuffer(GL_RENDERBUFFER, 0); // 分配内存后，可解绑渲染缓冲
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer is not complete!" << std::endl;
+	}
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	glDrawBuffers(2, attachments.data());
+
+	// 解绑，激活默认帧缓冲渲染，保证我们不会不小心渲染到错误的帧缓冲上
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return std::make_shared<Framebuffer>(fbo, texIds);
 }
 
 std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(int samples)

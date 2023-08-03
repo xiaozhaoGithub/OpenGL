@@ -2,6 +2,7 @@
 #define FRAMEBUFFERFACTORY_H_
 
 #include <memory>
+#include <vector>
 
 #include "glad/glad.h"
 
@@ -12,7 +13,8 @@
 class Framebuffer
 {
 public:
-	Framebuffer(unsigned int id, unsigned int texId) : m_id(id), m_texId(texId) { }
+	Framebuffer(unsigned int id, unsigned int texId) : m_id(id) { m_texIds.emplace_back(texId); }
+	Framebuffer(unsigned int id, const std::vector<unsigned int>& texIds) : m_id(id) { m_texIds = texIds; }
 	~Framebuffer();
 
 	unsigned int id() { return m_id; }
@@ -22,14 +24,15 @@ public:
 	 */
 	void bindFramebuffer();
 	void bindTexture();
-	void bindTexture(unsigned int index);
-	void bindTexture(unsigned int type, unsigned int index);
+	void bindTexture(unsigned int activeTex);
+	void bindTexture(unsigned int type, unsigned int activeTex);
+	void bindTexture(unsigned int type, unsigned int activeTex, unsigned int index);
 
 	virtual void blitFramebuffer(unsigned int targetFbo) {};
 
 protected:
 	unsigned int m_id;
-	unsigned int m_texId;
+	std::vector<unsigned int> m_texIds;
 };
 
 class MuiltSampleFramebuffer : public Framebuffer
@@ -51,6 +54,7 @@ public:
 	FramebufferFactory() {}
 	
 	static std::shared_ptr<Framebuffer> createFramebuffer(const FramebufferParam& param = FramebufferParam());
+	static std::shared_ptr<Framebuffer> createFramebuffer(const FramebufferParam& param, int attachNum);
 	static std::shared_ptr<Framebuffer> createFramebuffer(int samples);
 	static std::shared_ptr<Framebuffer> createDepthFb();
 	static std::shared_ptr<Framebuffer> createCubeMapDepthFb();

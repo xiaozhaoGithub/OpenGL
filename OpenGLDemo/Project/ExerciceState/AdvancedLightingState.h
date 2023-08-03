@@ -23,7 +23,7 @@ private:
 
 	// business painter
 	void drawFloor(std::shared_ptr<AbstractShader> shader);
-	void drawCube();
+	void drawCube(unsigned int texId = 0);
 	void drawDepthMap();
 	void drawSceneToDepthMap(std::shared_ptr<AbstractShader> shader);
 
@@ -35,6 +35,11 @@ private:
 	void drawNormalMap();
 	void drawParallaxMap();
 	void drawHdr();
+
+	void drawBloom();
+	void drawBrightness();
+	void drawGaussBlurBrightness();
+	void drawMixHdrAndBlur();
 
 private:
 	std::shared_ptr<CameraWrapper> m_cameraWrapper;
@@ -57,11 +62,19 @@ private:
 	std::shared_ptr<AbstractShader> m_hdrLightShader;
 	std::shared_ptr<AbstractShader> m_hdrShader;
 
+	std::shared_ptr<AbstractShader> m_bloomShader;
+	std::shared_ptr<AbstractShader> m_lightBoxShader;
+	std::shared_ptr<AbstractShader> m_blurShader;
+	std::shared_ptr<AbstractShader> m_bloomFinalShader;
+
 	std::shared_ptr<Framebuffer> m_depthMapFb;
 	std::shared_ptr<Framebuffer> m_cubeMapDepthFb;
 	std::shared_ptr<Framebuffer> m_floatFb;
+	std::shared_ptr<Framebuffer> m_multAttachFloatFb;
+	std::vector<std::shared_ptr<Framebuffer>> m_pingpongFbs;
 
 	unsigned int m_woodTexId;
+	unsigned int m_containerTexId;
 };
 
 #endif

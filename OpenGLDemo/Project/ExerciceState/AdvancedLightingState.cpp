@@ -19,6 +19,7 @@ struct AdvancedLightingStateControlParam
 	float heightScale = 0.1f;
 	float exposure = 1.0f;
 	bool isUseHdr = false;
+	bool isBloom = true;
 };
 
 AdvancedLightingState::AdvancedLightingState()
@@ -77,14 +78,34 @@ AdvancedLightingState::AdvancedLightingState()
 	m_hdrShader->use();
 	m_hdrShader->setInt("hdrFbTexture", 0);
 
+	m_bloomShader = shaderFactory->shaderProgram("bloom", "ShaderProgram/AdvancedLight/omnidirection_shadow.vs", "ShaderProgram/AdvancedLight/bloom.fs");
+	m_bloomShader->use();
+	m_bloomShader->setInt("diffuseTexture", 0);
+
+	m_lightBoxShader = shaderFactory->shaderProgram("light_box", "ShaderProgram/AdvancedLight/omnidirection_shadow.vs", "ShaderProgram/AdvancedLight/light_box.fs");
+
+	m_blurShader = shaderFactory->shaderProgram("blur", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/blur.fs");
+	m_blurShader->use();
+	m_blurShader->setInt("brightTexture", 0);
+
+	m_bloomFinalShader = shaderFactory->shaderProgram("bloom_final", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/bloom_final.fs");
+	m_bloomFinalShader->use();
+	m_bloomFinalShader->setInt("scene", 0);
+	m_bloomFinalShader->setInt("bloomBlur", 1);
+
 	m_depthMapFb = FramebufferFactory::createDepthFb();
 	m_cubeMapDepthFb = FramebufferFactory::createCubeMapDepthFb();
 
 	FramebufferFactory::FramebufferParam fbParam;
 	fbParam.internalFormat3 = GL_RGB16F;
 	m_floatFb = FramebufferFactory::createFramebuffer(fbParam);
+
+	fbParam.internalFormat3 = GL_RGBA16F;
+	m_multAttachFloatFb = FramebufferFactory::createFramebuffer(fbParam, 2);
+	m_pingpongFbs = { FramebufferFactory::createFramebuffer(fbParam), FramebufferFactory::createFramebuffer(fbParam) };
 	
 	m_woodTexId = TextureHelper::loadTexture("skin/textures/wood.png");
+	m_containerTexId = TextureHelper::loadTexture("skin/container2.png");
 
 	glEnable(GL_DEPTH_TEST);
 }
@@ -149,6 +170,10 @@ void AdvancedLightingState::draw()
 		drawHdr();
 		break;
 	}
+	case GLFW_KEY_8: {
+		drawBloom();
+		break;
+	}
 	default:
 		break;
 	}
@@ -191,24 +216,23 @@ void AdvancedLightingState::processInput()
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		m_controlParam->isShowShadow = !m_controlParam->isShowShadow;
 		m_controlParam->isUseHdr = !m_controlParam->isUseHdr;
+		m_controlParam->isBloom = !m_controlParam->isBloom;
 	}
 
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_Q) == GLFW_PRESS) {
 		if (m_controlParam->stateKey == GLFW_KEY_6) {
 			m_controlParam->heightScale = m_controlParam->heightScale > 0.0f ? m_controlParam->heightScale - 0.0005f : 0.0f;
 		}
-		else if (m_controlParam->stateKey == GLFW_KEY_7) {
-			m_controlParam->exposure = m_controlParam->exposure > 0.0f ? m_controlParam->exposure - 0.001f : 0.0f;
-		}
+
+		m_controlParam->exposure = m_controlParam->exposure > 0.0f ? m_controlParam->exposure - 0.001f : 0.0f;
 	}
 
 	if (glfwGetKey(g_globalWindow, GLFW_KEY_E) == GLFW_PRESS) {
 		if (m_controlParam->stateKey == GLFW_KEY_6) {
 			m_controlParam->heightScale = m_controlParam->heightScale < 1.0f ? m_controlParam->heightScale + 0.0005f : 1.0f;
 		}
-		else if (m_controlParam->stateKey == GLFW_KEY_7) {
-			m_controlParam->exposure += 0.001f;
-		}
+
+		m_controlParam->exposure += 0.001f;
 	}
 }
 
@@ -234,10 +258,17 @@ void AdvancedLightingState::drawFloor(std::shared_ptr<AbstractShader> shader)
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void AdvancedLightingState::drawCube()
+void AdvancedLightingState::drawCube(unsigned int texId)
 {
 	m_cubeVAO->bindVAO();
-	m_cubeVAO->bindTexture();
+	if (texId == 0) {
+		m_cubeVAO->bindTexture();
+	} 
+	else {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texId);
+	}
+
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
@@ -612,6 +643,150 @@ void AdvancedLightingState::drawHdr()
 	m_hdrShader->setBool("isUseHdr", m_controlParam->isUseHdr);
 	m_hdrShader->setFloat("exposure", m_controlParam->exposure);
 
+	drawQuad();
+}
+
+void AdvancedLightingState::drawBloom()
+{
+	// 提取亮色
+	drawBrightness();
+
+	// 模糊明亮片段（两步高斯模糊）
+	drawGaussBlurBrightness();
+
+	// 纹理混合
+	drawMixHdrAndBlur();
+}
+
+void AdvancedLightingState::drawBrightness()
+{
+	m_multAttachFloatFb->bindFramebuffer();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_woodTexId);
+
+	// lighting info 暂不考虑效率问题，在此定义数组，方便阅读
+	// -------------
+	// positions
+	std::vector<glm::vec3> lightPositions;
+	lightPositions.push_back(glm::vec3(0.0f, 0.5f, 1.5f));
+	lightPositions.push_back(glm::vec3(-4.0f, 0.5f, -3.0f));
+	lightPositions.push_back(glm::vec3(3.0f, 0.5f, 1.0f));
+	lightPositions.push_back(glm::vec3(-.8f, 2.4f, -1.0f));
+	// colors
+	std::vector<glm::vec3> lightColors;
+	lightColors.push_back(glm::vec3(5.0f, 5.0f, 5.0f));
+	lightColors.push_back(glm::vec3(10.0f, 0.0f, 0.0f));
+	lightColors.push_back(glm::vec3(0.0f, 0.0f, 15.0f));
+	lightColors.push_back(glm::vec3(0.0f, 5.0f, 0.0f));
+
+	m_bloomShader->use();
+	for (int i = 0; i < lightPositions.size(); i++) {
+		m_bloomShader->setVec("lights[" + std::to_string(i) + "].position", lightPositions[i]);
+		m_bloomShader->setVec("lights[" + std::to_string(i) + "].color", lightColors[i]);
+	}
+	// create one large cube that acts as the floor
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0));
+	model = glm::scale(model, glm::vec3(12.5f, 0.5f, 12.5f));
+	m_bloomShader->setMatrix("modelMat", model);
+	drawCube();
+
+	// then create multiple cubes as the scenery
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	m_bloomShader->setMatrix("modelMat", model);
+	drawCube(m_containerTexId);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	m_bloomShader->setMatrix("modelMat", model);
+	drawCube(m_containerTexId);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.0f, -1.0f, 2.0));
+	model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	m_bloomShader->setMatrix("modelMat", model);
+	drawCube(m_containerTexId);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 2.7f, 4.0));
+	model = glm::rotate(model, glm::radians(23.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	model = glm::scale(model, glm::vec3(1.25));
+	m_bloomShader->setMatrix("modelMat", model);
+	drawCube(m_containerTexId);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -3.0));
+	model = glm::rotate(model, glm::radians(124.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	m_bloomShader->setMatrix("modelMat", model);
+	drawCube(m_containerTexId);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	m_bloomShader->setMatrix("modelMat", model);
+	drawCube(m_containerTexId);
+
+	// light source
+	m_lightBoxShader->use();
+	for (int i = 0; i < lightPositions.size(); i++) {
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPositions[i]);
+		model = glm::scale(model, glm::vec3(0.25f));
+
+		m_lightBoxShader->setMatrix("modelMat", model);
+		m_lightBoxShader->setVec("lightColor", lightColors[i]);
+		drawCube();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void AdvancedLightingState::drawGaussBlurBrightness()
+{
+	bool isHorizontal = true;
+	bool isFirstRender = true;
+	int amount = 10;
+
+	m_blurShader->use();
+	for (int i = 0; i < amount; i++) {
+		m_pingpongFbs[isHorizontal]->bindFramebuffer();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 注：官方教程无此行代码，需要清空缓冲数据，否则纹理不生效
+
+		m_blurShader->setBool("isHorizontal", isHorizontal);
+
+		// 第一次渲染, ping pong缓冲中纹理无数据, 绑定一个明亮场景纹理（location = 1）进行渲染
+		if (isFirstRender) {
+			m_multAttachFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE0, 1);
+		}
+		else {
+			m_pingpongFbs[!isHorizontal]->bindTexture();
+		}
+		drawQuad();
+
+		isHorizontal = !isHorizontal;
+
+		if (isFirstRender) {
+			isFirstRender = false;
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void AdvancedLightingState::drawMixHdrAndBlur()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	m_multAttachFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE0, 0); // hdr
+	m_pingpongFbs[false]->bindTexture(GL_TEXTURE_2D, GL_TEXTURE1, 0); // blur
+
+	m_bloomFinalShader->use();
+	m_bloomFinalShader->setBool("isBloom", m_controlParam->isBloom);
+	m_bloomFinalShader->setFloat("exposure", m_controlParam->exposure);
 	drawQuad();
 }
 
