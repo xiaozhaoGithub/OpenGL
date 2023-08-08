@@ -28,7 +28,7 @@ public:
 	void bindTexture(unsigned int type, unsigned int activeTex);
 	void bindTexture(unsigned int type, unsigned int activeTex, unsigned int index);
 
-	virtual void blitFramebuffer(unsigned int targetFbo) {};
+	void blitFramebuffer(unsigned int targetFbo, unsigned int mask = GL_COLOR_BUFFER_BIT);
 
 protected:
 	unsigned int m_id;
@@ -39,8 +39,6 @@ class MuiltSampleFramebuffer : public Framebuffer
 {
 public:
 	MuiltSampleFramebuffer(unsigned int id, unsigned int texId) : Framebuffer(id, texId) {}
-
-	void blitFramebuffer(unsigned int targetFb) override;
 };
 
 // Simple factory

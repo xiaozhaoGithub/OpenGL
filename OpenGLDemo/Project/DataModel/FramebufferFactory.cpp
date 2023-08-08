@@ -36,6 +36,18 @@ void Framebuffer::bindTexture(unsigned int type, unsigned int activeTex, unsigne
 	glBindTexture(type, m_texIds[index]);
 }
 
+void Framebuffer::blitFramebuffer(unsigned int targetFbo, unsigned int mask)
+{
+	// 类型后缀：_FRAMEBUFFER
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_id);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, targetFbo);
+
+	// 位块传送
+	glBlitFramebuffer(0, 0, UCDD::kViewportWidth, UCDD::kViewportHeight, 0, 0, UCDD::kViewportWidth, UCDD::kViewportHeight,
+		mask,
+		GL_NEAREST);
+}
+
 std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const FramebufferParam& param)
 {
 	unsigned int fbo;
@@ -93,7 +105,7 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 	// 创建附件（纹理或渲染缓冲对象），附件是一个内存位置，它能够作为帧缓冲的一个缓冲
 	// 1.纹理附件
 	unsigned int* colorbuffers = new unsigned int[attachNum];
-	glGenTextures(2, colorbuffers);
+	glGenTextures(attachNum, colorbuffers);
 
 	std::vector<unsigned int > attachments;
 	std::vector<unsigned int> texIds;
@@ -103,7 +115,8 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 
 		// 将维度设置为了屏幕大小（尽管这不是必须的）
 		// 空的纹理，提供给帧缓冲渲染时，再填入颜色缓冲数据
-		glTexImage2D(GL_TEXTURE_2D, 0, param.internalFormat3, UCDD::kViewportWidth, UCDD::kViewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, param.internalFormat3, UCDD::kViewportWidth, UCDD::kViewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		
 		// 环绕方式默认是GL_REPEAT，取到的是屏幕另一边的像素，而另一边的像素本不应该对中心像素产生影响，这可能会在屏幕边缘产生很奇怪的条纹
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -131,7 +144,8 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 		std::cout << "Framebuffer is not complete!" << std::endl;
 	}
 	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-	glDrawBuffers(2, attachments.data());
+	// 注：第一个参数个数需要指定正确，否则导致部分缓冲附件没有被使用
+	glDrawBuffers(attachNum, attachments.data());
 
 	// 解绑，激活默认帧缓冲渲染，保证我们不会不小心渲染到错误的帧缓冲上
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -269,17 +283,5 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createCubeMapDepthFb()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return std::make_shared<Framebuffer>(fbo, texturId);
-}
-
-void MuiltSampleFramebuffer::blitFramebuffer(unsigned int targetFbo)
-{
-	// 类型后缀：_FRAMEBUFFER
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_id);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, targetFbo);
-
-	// 位块传送
-	glBlitFramebuffer(0, 0, UCDD::kViewportWidth, UCDD::kViewportHeight, 0, 0, UCDD::kViewportWidth, UCDD::kViewportHeight,
-		GL_COLOR_BUFFER_BIT,
-		GL_NEAREST);
 }
 

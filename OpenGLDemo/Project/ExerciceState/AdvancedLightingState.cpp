@@ -107,6 +107,8 @@ AdvancedLightingState::AdvancedLightingState()
 	m_woodTexId = TextureHelper::loadTexture("skin/textures/wood.png");
 	m_containerTexId = TextureHelper::loadTexture("skin/container2.png");
 
+	initDefferedShading();
+
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -174,6 +176,10 @@ void AdvancedLightingState::draw()
 		drawBloom();
 		break;
 	}
+	case GLFW_KEY_9: {
+		drawDeferredShading();
+		break;
+	}
 	default:
 		break;
 	}
@@ -234,6 +240,53 @@ void AdvancedLightingState::processInput()
 
 		m_controlParam->exposure += 0.001f;
 	}
+}
+
+void AdvancedLightingState::initDefferedShading()
+{
+	// deffered shading
+	m_geometryPassShader = Singleton<ShaderFactory>::instance()->shaderProgram("g_buffer", "ShaderProgram/AdvancedLight/omnidirection_shadow.vs", "ShaderProgram/AdvancedLight/g_buffer.fs");
+	m_lightingPassShader = Singleton<ShaderFactory>::instance()->shaderProgram("deffered_shading", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/deffered_shading.fs");
+	m_backpackModel = std::make_unique<Model>("skin/nanosuit/nanosuit.obj");
+
+	m_backpackObjectPositions.push_back(glm::vec3(-3.0, -0.5, -3.0));
+	m_backpackObjectPositions.push_back(glm::vec3(0.0, -0.5, -3.0));
+	m_backpackObjectPositions.push_back(glm::vec3(3.0, -0.5, -3.0));
+	m_backpackObjectPositions.push_back(glm::vec3(-3.0, -0.5, 0.0));
+	m_backpackObjectPositions.push_back(glm::vec3(0.0, -0.5, 0.0));
+	m_backpackObjectPositions.push_back(glm::vec3(3.0, -0.5, 0.0));
+	m_backpackObjectPositions.push_back(glm::vec3(-3.0, -0.5, 3.0));
+	m_backpackObjectPositions.push_back(glm::vec3(0.0, -0.5, 3.0));
+	m_backpackObjectPositions.push_back(glm::vec3(3.0, -0.5, 3.0));
+
+	// configure g-buffer fb
+	FramebufferFactory::FramebufferParam fbParam;
+	fbParam.internalFormat3 = GL_RGBA16F;
+	// attach 3，反射度实际可直接用GL_RGBA，此处接口未实现，暂且都用浮点精度存储纹理
+	m_defferedShadingFloatFb = FramebufferFactory::createFramebuffer(fbParam, 3);
+
+	// lighting info
+	const unsigned int lightSourceNum = 32;
+	srand(13);
+	for (unsigned int i = 0; i < lightSourceNum; i++) {
+		// calculate slightly random offsets
+		float xPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+		float yPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 4.0);
+		float zPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+		m_lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
+
+		// also calculate random color
+		float rColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+		float gColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+		float bColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+		m_lightColors.push_back(glm::vec3(rColor, gColor, bColor));
+	}
+
+	// shader configuration
+	m_lightingPassShader->use();
+	m_lightingPassShader->setInt("gPosition", 0);
+	m_lightingPassShader->setInt("gNormal", 1);
+	m_lightingPassShader->setInt("gAlbedoSpec", 2);
 }
 
 void AdvancedLightingState::drawQuad()
@@ -788,5 +841,68 @@ void AdvancedLightingState::drawMixHdrAndBlur()
 	m_bloomFinalShader->setBool("isBloom", m_controlParam->isBloom);
 	m_bloomFinalShader->setFloat("exposure", m_controlParam->exposure);
 	drawQuad();
+}
+
+void AdvancedLightingState::drawDeferredShading()
+{
+	// 延迟渲染缺点：大内存开销，没有MSAA和混合(仍需要正向渲染的配合)
+
+	// geometry pass: render scene into gbuffer
+	m_defferedShadingFloatFb->bindFramebuffer();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	m_geometryPassShader->use();
+	for (unsigned int i = 0; i < m_backpackObjectPositions.size(); i++) {
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, m_backpackObjectPositions[i]);
+		model = glm::scale(model, glm::vec3(0.25f));
+		m_geometryPassShader->setMatrix("modelMat", model);
+
+		m_backpackModel->draw(m_geometryPassShader);
+	}
+
+	// lighting pass: get data from gbuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	m_defferedShadingFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE0, 0);
+	m_defferedShadingFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE1, 1);
+	m_defferedShadingFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE2, 2);
+
+	m_lightingPassShader->use();
+	for (unsigned int i = 0; i < m_lightPositions.size(); i++) {
+		std::string lightPrefix = "lights[" + std::to_string(i) + "].";
+		m_lightingPassShader->setVec(lightPrefix + "position", m_lightPositions[i]);
+		m_lightingPassShader->setVec(lightPrefix + "color", m_lightColors[i]);
+		float constant = 1.0f;
+		float linear = 0.7f;
+		float quadratic = 1.8f;
+		m_lightingPassShader->setFloat(lightPrefix + "linear", linear);
+		m_lightingPassShader->setFloat(lightPrefix + "quadratic", quadratic);
+
+		// 利用公式，算出光体积半径
+		// 实际由于GPU和GLSL并不擅长优化循环和分支, 一个if语句所有的分支从而保证着色器运行都是一样的，这使得我们之前的半径检测优化完全变得无用，我们仍然在对所有光源计算光照
+		// 真正使用光体积，需要渲染一个实际球体
+		// demo url: https://ogldev.org/
+		const float maxBrightness = std::fmaxf(std::fmaxf(m_lightPositions[i].r, m_lightPositions[i].g), m_lightPositions[i].b);
+		float radius = (-linear + std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * maxBrightness))) / (2 * quadratic);
+		m_lightingPassShader->setFloat(lightPrefix + "radius", radius);
+	}
+	m_lightingPassShader->setVec("viewPos", m_cameraWrapper->cameraPos());
+	drawQuad();
+
+	//  copy content of geometry's depth buffer to default framebuffer's depth buffer
+	m_defferedShadingFloatFb->blitFramebuffer(0, GL_DEPTH_BUFFER_BIT);
+
+	// render lights on top of scene;
+	m_lightBoxShader->use();
+	for (unsigned int i = 0; i < m_lightPositions.size(); i++) {
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, m_lightPositions[i]);
+		model = glm::scale(model, glm::vec3(0.125f));
+		m_lightBoxShader->setMatrix("modelMat", model);
+		m_lightBoxShader->setVec("lightColor", m_lightPositions[i]);
+		drawCube();
+	}
 }
 

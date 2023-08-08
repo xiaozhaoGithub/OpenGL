@@ -17,6 +17,7 @@ public:
 
 private:
 	void processInput();
+	void initDefferedShading();
 
 	// common painter
 	void drawQuad();
@@ -40,6 +41,8 @@ private:
 	void drawBrightness();
 	void drawGaussBlurBrightness();
 	void drawMixHdrAndBlur();
+
+	void drawDeferredShading();
 
 private:
 	std::shared_ptr<CameraWrapper> m_cameraWrapper;
@@ -75,6 +78,14 @@ private:
 
 	unsigned int m_woodTexId;
 	unsigned int m_containerTexId;
+
+	std::shared_ptr<AbstractShader> m_geometryPassShader;
+	std::shared_ptr<AbstractShader> m_lightingPassShader;
+	std::unique_ptr<Model> m_backpackModel;
+	std::vector<glm::vec3> m_backpackObjectPositions;
+	std::vector<glm::vec3> m_lightPositions;
+	std::vector<glm::vec3> m_lightColors;
+	std::shared_ptr<Framebuffer> m_defferedShadingFloatFb;
 };
 
 #endif
