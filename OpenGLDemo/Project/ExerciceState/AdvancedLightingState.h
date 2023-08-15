@@ -17,7 +17,9 @@ public:
 
 private:
 	void processInput();
+
 	void initDefferedShading();
+	void initSsaoShading();
 
 	// common painter
 	void drawQuad();
@@ -43,6 +45,7 @@ private:
 	void drawMixHdrAndBlur();
 
 	void drawDeferredShading();
+	void drawSsao();
 
 private:
 	std::shared_ptr<CameraWrapper> m_cameraWrapper;
@@ -86,6 +89,18 @@ private:
 	std::vector<glm::vec3> m_lightPositions;
 	std::vector<glm::vec3> m_lightColors;
 	std::shared_ptr<Framebuffer> m_defferedShadingFloatFb;
-};
+
+	std::shared_ptr<AbstractShader> m_ssaoGeometryPassShader;
+	std::shared_ptr<AbstractShader> m_ssaoShader;
+	std::shared_ptr<AbstractShader> m_ssaoBlurShader;
+	std::shared_ptr<AbstractShader> m_ssaoLightingPassShader;
+	std::shared_ptr<Framebuffer> m_ssaoGeometryFloatFb;
+	std::shared_ptr<Framebuffer> m_ssaoFloatFb;
+	std::shared_ptr<Framebuffer> m_ssaoBlurFloatFb;
+	std::vector<glm::vec3> m_ssaoKernel;
+	unsigned int m_ssaoNoiseTexId;
+	glm::vec3 m_lightPos;
+	glm::vec3 m_lightColor;
+};	
 
 #endif

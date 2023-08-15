@@ -4,6 +4,25 @@
 
 #include "stb_image.h"	
 
+unsigned int TextureHelper::loadTexture(const TexParam& param)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+
+	int internalformat = param.internalFormat3;
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, param.width, param.height, 0, param.format, GL_FLOAT, param.data);
+	glGenerateMipmap(GL_TEXTURE_2D); // 在生成纹理之后调用glGenerateMipmap。这会为当前绑定的纹理自动生成所有需要的多级渐远纹理。
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param.wrapS);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param.wrapT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
+	
+	return textureID;
+}
+
 unsigned int TextureHelper::loadTexture(char const* path, const TexParam& param)
 {
 	unsigned int textureID;

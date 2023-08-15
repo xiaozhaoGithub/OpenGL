@@ -46,8 +46,8 @@ class FramebufferFactory
 {
 public:
 	struct FramebufferParam {
-		int internalFormat3 = GL_RGB;
-		int internalFormat4 = GL_RGBA;
+		int internalFormat = GL_RGB;
+		int format = GL_RGB;
 	};
 	FramebufferFactory() {}
 	

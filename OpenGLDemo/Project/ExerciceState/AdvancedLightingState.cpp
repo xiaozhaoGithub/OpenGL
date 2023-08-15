@@ -1,6 +1,7 @@
 #include "AdvancedLightingState.h"
 
 #include <vector>
+#include <random>
 
 #include "Singleton.h"
 #include "CommonDataDef.h"
@@ -97,10 +98,10 @@ AdvancedLightingState::AdvancedLightingState()
 	m_cubeMapDepthFb = FramebufferFactory::createCubeMapDepthFb();
 
 	FramebufferFactory::FramebufferParam fbParam;
-	fbParam.internalFormat3 = GL_RGB16F;
+	fbParam.internalFormat = GL_RGB16F;
 	m_floatFb = FramebufferFactory::createFramebuffer(fbParam);
 
-	fbParam.internalFormat3 = GL_RGBA16F;
+	fbParam.internalFormat = GL_RGBA16F;
 	m_multAttachFloatFb = FramebufferFactory::createFramebuffer(fbParam, 2);
 	m_pingpongFbs = { FramebufferFactory::createFramebuffer(fbParam), FramebufferFactory::createFramebuffer(fbParam) };
 	
@@ -108,6 +109,7 @@ AdvancedLightingState::AdvancedLightingState()
 	m_containerTexId = TextureHelper::loadTexture("skin/container2.png");
 
 	initDefferedShading();
+	initSsaoShading();
 
 	glEnable(GL_DEPTH_TEST);
 }
@@ -179,6 +181,10 @@ void AdvancedLightingState::draw()
 	case GLFW_KEY_9: {
 		drawDeferredShading();
 		break;
+	}	
+	case GLFW_KEY_0: {
+		drawSsao();
+		break;
 	}
 	default:
 		break;
@@ -187,7 +193,7 @@ void AdvancedLightingState::draw()
 
 void AdvancedLightingState::processInput()
 {
-	for (int key = GLFW_KEY_1; key <= GLFW_KEY_9; key++) {
+	for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; key++) {
 		if (glfwGetKey(g_globalWindow, key) == GLFW_PRESS) {
 			m_controlParam->stateKey = key;
 		}
@@ -261,7 +267,7 @@ void AdvancedLightingState::initDefferedShading()
 
 	// configure g-buffer fb
 	FramebufferFactory::FramebufferParam fbParam;
-	fbParam.internalFormat3 = GL_RGBA16F;
+	fbParam.internalFormat = GL_RGBA16F;
 	// attach 3，反射度实际可直接用GL_RGBA，此处接口未实现，暂且都用浮点精度存储纹理
 	m_defferedShadingFloatFb = FramebufferFactory::createFramebuffer(fbParam, 3);
 
@@ -287,6 +293,88 @@ void AdvancedLightingState::initDefferedShading()
 	m_lightingPassShader->setInt("gPosition", 0);
 	m_lightingPassShader->setInt("gNormal", 1);
 	m_lightingPassShader->setInt("gAlbedoSpec", 2);
+}
+
+void AdvancedLightingState::initSsaoShading()
+{
+	// shader configuration
+	m_ssaoGeometryPassShader = Singleton<ShaderFactory>::instance()->shaderProgram("ssao_geometry", "ShaderProgram/AdvancedLight/ssao_geometry.vs", "ShaderProgram/AdvancedLight/ssao_geometry.fs");
+	
+	m_ssaoShader = Singleton<ShaderFactory>::instance()->shaderProgram("ssao", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/ssao.fs");
+	m_ssaoShader->use();
+	m_ssaoShader->setInt("gPosition", 0);
+	m_ssaoShader->setInt("gNormal", 1);
+	m_ssaoShader->setInt("gTexNoise", 2);
+	// tile noise texture over screen based on screen dimensions divided by noise size
+	m_ssaoShader->setVec("noiseScale", glm::vec2(UCDD::kViewportWidth / 4.0f, UCDD::kViewportHeight / 4.0f));
+
+	m_ssaoBlurShader = Singleton<ShaderFactory>::instance()->shaderProgram("ssao_blur", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/ssao_blur.fs");
+	m_ssaoBlurShader->use();
+	m_ssaoBlurShader->setInt("gSsao", 0);
+
+	m_ssaoLightingPassShader = Singleton<ShaderFactory>::instance()->shaderProgram("ssao_lighting", "ShaderProgram/Advanced/screen_texture_shader.vs", "ShaderProgram/AdvancedLight/ssao_lighting.fs");
+	m_ssaoLightingPassShader->use();
+	m_ssaoLightingPassShader->setInt("gPosition", 0);
+	m_ssaoLightingPassShader->setInt("gNormal", 1);
+	m_ssaoLightingPassShader->setInt("gAlbedo", 2);
+	m_ssaoLightingPassShader->setInt("gSsao", 3);
+
+
+	// configure g-buffer fb
+	FramebufferFactory::FramebufferParam fbParam;
+	fbParam.internalFormat = GL_RGBA16F;
+	m_ssaoGeometryFloatFb = FramebufferFactory::createFramebuffer(fbParam, 3);
+
+	// also create framebuffer to hold SSAO processing stage
+	fbParam.internalFormat = GL_RED;
+	fbParam.format = GL_RED;
+	m_ssaoFloatFb = FramebufferFactory::createFramebuffer(fbParam);
+
+	// blur ssao
+	m_ssaoBlurFloatFb = FramebufferFactory::createFramebuffer(fbParam);
+
+	// 采样法向半球
+	auto myLerp = [](float a, float b, float f) {
+		return a + f * (b - a);
+	};
+
+	std::uniform_real_distribution<float> randomFloats(0.0f, 1.0f);
+	std::default_random_engine generator;
+	for (int i = 0; i < 64; ++i) {
+		glm::vec3 sample(glm::vec3(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator)));
+		sample = normalize(sample);
+		sample *= randomFloats(generator);
+		float scale = float(i) / 64.0f;
+
+		// 将更多的注意放在靠近真正片段的遮蔽上，更接近法向半球核中心的样本，使用加速插值函数
+		// 缩放距离
+		scale = myLerp(0.1f, 1.0f, scale * scale);
+		sample *= scale;
+		m_ssaoKernel.emplace_back(sample);
+	}
+
+	// generate noise texture
+	// 用于随机核心转动
+	std::vector<glm::vec3> ssaoNoise;
+	for (int i = 0; i < 64; ++i) {
+		// 采样核心围绕Z轴旋转
+		glm::vec3 noise(glm::vec3(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0));
+		ssaoNoise.emplace_back(noise);
+	}
+
+	TextureHelper::TexParam noiseTexParam;
+	noiseTexParam.internalFormat3 = GL_RGBA32F;
+	noiseTexParam.format = GL_RGB;
+	noiseTexParam.width = 4;
+	noiseTexParam.height = 4;
+	noiseTexParam.data = &ssaoNoise[0];
+	m_ssaoNoiseTexId = TextureHelper::loadTexture(noiseTexParam);
+
+
+	// lighting info
+	m_lightPos = glm::vec3(2.0, 4.0, -2.0);
+	//m_lightColor = glm::vec3(1.0, 1.0, 1.0);
+	m_lightColor = glm::vec3(0.2, 0.2, 0.7);
 }
 
 void AdvancedLightingState::drawQuad()
@@ -885,7 +973,7 @@ void AdvancedLightingState::drawDeferredShading()
 		// 真正使用光体积，需要渲染一个实际球体
 		// demo url: https://ogldev.org/
 		const float maxBrightness = std::fmaxf(std::fmaxf(m_lightPositions[i].r, m_lightPositions[i].g), m_lightPositions[i].b);
-		float radius = (-linear + std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * maxBrightness))) / (2 * quadratic);
+		float radius = (-linear + std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0f / 5.0f) * maxBrightness))) / (2 * quadratic);
 		m_lightingPassShader->setFloat(lightPrefix + "radius", radius);
 	}
 	m_lightingPassShader->setVec("viewPos", m_cameraWrapper->cameraPos());
@@ -904,5 +992,76 @@ void AdvancedLightingState::drawDeferredShading()
 		m_lightBoxShader->setVec("lightColor", m_lightPositions[i]);
 		drawCube();
 	}
+}
+
+void AdvancedLightingState::drawSsao()
+{
+	// 1. geometry pass: render scene into gbuffer
+	m_ssaoGeometryFloatFb->bindFramebuffer();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// floor cube
+	m_ssaoGeometryPassShader->use();
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0, -1.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(20.0f, 1.0f, 20.0f));
+	m_ssaoGeometryPassShader->setMatrix("modelMat", model);
+	drawCube();
+
+	// backpack model on the floor
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 5.0f));
+	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	m_ssaoGeometryPassShader->setMatrix("modelMat", model);
+	m_backpackModel->draw(m_ssaoGeometryPassShader);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// 2. generate SSAO texture
+	// 计算供环境光直接计算的遮蔽因子（即 1 - 黑暗的遮蔽因子）
+	m_ssaoFloatFb->bindFramebuffer();
+	glClear(GL_COLOR_BUFFER_BIT);
+	// Send kernel + rotation 
+	m_ssaoShader->use();
+	for (unsigned int i = 0; i < 64; ++i) {
+		m_ssaoShader->setVec("samples[" + std::to_string(i) + "]", m_ssaoKernel[i]);
+	}
+	auto projectionMat = glm::perspective(glm::radians(m_cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
+	m_ssaoShader->setMatrix("projectionMat", projectionMat);
+
+	m_ssaoGeometryFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE0, 0);
+	m_ssaoGeometryFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE1, 1);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_ssaoNoiseTexId);
+	drawQuad();
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// 3. blur SSAO texture to remove noise
+	m_ssaoBlurFloatFb->bindFramebuffer();
+	glClear(GL_COLOR_BUFFER_BIT);
+	m_ssaoBlurShader->use();
+	m_ssaoFloatFb->bindTexture(GL_TEXTURE0); // 遮蔽因子灰度输出
+	drawQuad();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// 4. lighting pass: traditional deferred Blinn-Phong lighting with added screen-space ambient occlusion
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	m_ssaoLightingPassShader->use();
+	// send light relevant uniforms
+	glm::vec3 lightPosView = glm::vec3(m_cameraWrapper->lookAtMatrix() * glm::vec4(m_lightPos, 1.0));
+	m_ssaoLightingPassShader->setVec("light.position", lightPosView);
+	m_ssaoLightingPassShader->setVec("light.color", m_lightColor);
+
+	// Update attenuation parameters
+	const float linear = 0.09f;
+	const float quadratic = 0.032f;
+	m_ssaoLightingPassShader->setFloat("light.linear", linear);
+	m_ssaoLightingPassShader->setFloat("light.quadratic", quadratic);
+	m_ssaoGeometryFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE0, 0);
+	m_ssaoGeometryFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE1, 1);
+	m_ssaoGeometryFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE2, 2);
+	m_ssaoBlurFloatFb->bindTexture(GL_TEXTURE_2D, GL_TEXTURE3, 0); // add extra SSAO texture to lighting pass
+	drawQuad();
 }
 

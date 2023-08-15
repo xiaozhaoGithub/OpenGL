@@ -23,8 +23,10 @@ public:
 	void setFloat(const std::string& name, float value);
 	void setFloat(const std::string& name, float v1, float v2, float v3, float v4);
 
+	void setVec(const std::string& name, float v1, float v2);
 	void setVec(const std::string& name, float v1, float v2, float v3);
 	void setVec(const std::string& name, float v1, float v2, float v3, float v4);
+	void setVec(const std::string& name, glm::vec2 vec);
 	void setVec(const std::string& name, glm::vec3 vec);
 	void setVec(const std::string& name, glm::vec4 vec);
 

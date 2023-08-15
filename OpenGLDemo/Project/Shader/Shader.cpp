@@ -122,6 +122,11 @@ void AbstractShader::setFloat(const std::string& name, float v1, float v2, float
 	glUniform4f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3, v4);
 }
 
+void AbstractShader::setVec(const std::string & name, float v1, float v2)
+{
+	glUniform2f(glGetUniformLocation(m_id, name.c_str()), v1, v2);
+}
+
 void AbstractShader::setVec(const std::string& name, float v1, float v2, float v3)
 {
 	glUniform3f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3);
@@ -130,6 +135,11 @@ void AbstractShader::setVec(const std::string& name, float v1, float v2, float v
 void AbstractShader::setVec(const std::string & name, float v1, float v2, float v3, float v4)
 {
 	glUniform4f(glGetUniformLocation(m_id, name.c_str()), v1, v2, v3, v4);
+}
+
+void AbstractShader::setVec(const std::string & name, glm::vec2 vec)
+{
+	setVec(name, vec.x, vec.y);
 }
 
 void AbstractShader::setVec(const std::string& name, glm::vec3 vec)
