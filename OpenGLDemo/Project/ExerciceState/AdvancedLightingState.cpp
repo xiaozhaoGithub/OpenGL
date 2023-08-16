@@ -354,6 +354,7 @@ void AdvancedLightingState::initSsaoShading()
 	}
 
 	// generate noise texture
+	// 对场景中每一个片段创建一个随机旋转向量，但这会很快将内存耗尽。所以，更好的方法是创建一个小的随机旋转向量纹理平铺在屏幕上。
 	// 用于随机核心转动
 	std::vector<glm::vec3> ssaoNoise;
 	for (int i = 0; i < 64; ++i) {
