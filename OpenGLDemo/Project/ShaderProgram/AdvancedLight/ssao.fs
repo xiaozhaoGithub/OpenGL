@@ -47,7 +47,7 @@ void main()
         sampleProjectPos.xyz = sampleProjectPos.xyz * 0.5 + 0.5; // transform range to 0.0 - 1.0
 
         // get sample depth
-        // 观察位置纹理，通过裁剪坐标当前的深度值 ???
+        // 观察位置纹理，通过裁剪坐标获取样本的深度值 ???
         float sampleDepth = texture(gPosition, sampleProjectPos.xy).z; // get depth value of kernel sample（半向法球中的采样点）
 
         // range check && caculate
