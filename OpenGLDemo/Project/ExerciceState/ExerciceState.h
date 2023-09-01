@@ -26,7 +26,7 @@ public:
 	AbstractExerciceState() {}
 	virtual ~AbstractExerciceState() {}
 
-	virtual void draw() = 0; // do action
+	virtual void draw(); // do action
 
 	void setFloat(const std::string& name, float value) { m_shader->setFloat(name, value); }
 	void setMatrix(const std::string& name, float* value) { m_shader->setMatrix(name, value); }
@@ -34,9 +34,12 @@ public:
 protected:
 	// TODO 考虑是否只调用一次
 	void initTransformMatUniformBlock();
+	virtual void processInput();
+	virtual void render();
 
 	std::shared_ptr<AbstractShader> m_shader;
 	unsigned int m_transformMatUbo;
+	unsigned int m_stateKey;
 };
 
 class AbstractTriangleExerciceState : public AbstractExerciceState

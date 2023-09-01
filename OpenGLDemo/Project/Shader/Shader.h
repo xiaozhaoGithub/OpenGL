@@ -31,6 +31,7 @@ public:
 	void setVec(const std::string& name, glm::vec4 vec);
 
 	void setMatrix(const std::string& name, float* value);
+	void setMatrix(const std::string& name, glm::mat3 value);
 	void setMatrix(const std::string& name, glm::mat4 value);
 
 	void setUniformBlockBinding(const std::string& name, unsigned int value);

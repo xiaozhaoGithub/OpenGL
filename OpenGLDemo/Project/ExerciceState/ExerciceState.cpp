@@ -6,6 +6,12 @@
 extern GLFWwindow* g_globalWindow;
 namespace ESCD = ExerciceStateCommonDataDef;
 
+void AbstractExerciceState::draw()
+{
+	processInput();
+	render();
+}
+
 void AbstractExerciceState::initTransformMatUniformBlock()
 {
 	// Uniform缓冲对象比起独立的uniform有很多好处。
@@ -20,6 +26,19 @@ void AbstractExerciceState::initTransformMatUniformBlock()
 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_transformMatUbo); // 绑定点 0
 	//glBindBufferRange(GL_UNIFORM_BUFFER, 0, m_uboExampleBlock, 0, sizeof(glm::mat4) * 2);
+}
+
+void AbstractExerciceState::processInput()
+{
+	for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; key++) {
+		if (glfwGetKey(g_globalWindow, key) == GLFW_PRESS) {
+			m_stateKey = key;
+		}
+	}
+}
+
+void AbstractExerciceState::render()
+{
 }
 
 ClearExerciceState::ClearExerciceState()

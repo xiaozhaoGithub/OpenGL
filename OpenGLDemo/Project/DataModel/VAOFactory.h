@@ -15,6 +15,7 @@ class AbstractVAO
 {
 public:
 	AbstractVAO(): m_id(0) { }
+	AbstractVAO(unsigned int id): m_id(id) { }
 	virtual ~AbstractVAO() { glDeleteVertexArrays(1, &m_id); }
 
 	void bindVAO();
@@ -25,11 +26,10 @@ public:
 	 * @brief 每次渲染前，需绑定待渲染的纹理对象，就像绑定VAO一样
 	 */
 	virtual void bindTexture();
-
-protected:
-	unsigned int m_id;
+	virtual unsigned int indexCount() { return 0; }
 
 private:
+	unsigned int m_id;
 	std::vector<std::pair<unsigned int, unsigned int> > m_textures;
 };
 
@@ -37,8 +37,21 @@ class TriangleVAO : public AbstractVAO
 {
 public:
 	TriangleVAO() {}
-	TriangleVAO(unsigned int id) { m_id = id; }
+	TriangleVAO(unsigned int id) : AbstractVAO(id) {}
 	~TriangleVAO() {}
+};
+
+class ElementVAO : public AbstractVAO
+{
+public:
+	ElementVAO() {}
+	ElementVAO(unsigned int id, unsigned int indexCount) : AbstractVAO(id) { m_indexCount = indexCount; }
+	~ElementVAO() {}
+
+	unsigned int indexCount() override { return m_indexCount; }
+
+private:
+	unsigned int m_indexCount;
 };
 
 
@@ -83,6 +96,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createTangentVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createNormalMapVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createParallaxMapVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createPbrLightingVAO() { return nullptr; }
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory
@@ -126,6 +140,7 @@ public:
 	std::shared_ptr<AbstractVAO> createTangentVAO() override;
 	std::shared_ptr<AbstractVAO> createNormalMapVAO() override;
 	std::shared_ptr<AbstractVAO> createParallaxMapVAO() override;
+	std::shared_ptr<AbstractVAO> createPbrLightingVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory

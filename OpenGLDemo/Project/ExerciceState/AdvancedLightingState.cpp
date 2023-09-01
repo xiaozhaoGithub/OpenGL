@@ -24,7 +24,8 @@ struct AdvancedLightingStateControlParam
 };
 
 AdvancedLightingState::AdvancedLightingState()
-	: m_controlParam(std::unique_ptr<AdvancedLightingStateControlParam>(new AdvancedLightingStateControlParam()))
+	: AbstractExerciceState()
+	, m_controlParam(std::unique_ptr<AdvancedLightingStateControlParam>(new AdvancedLightingStateControlParam()))
 {
 	m_cameraWrapper = Singleton<CameraWrapper>::instance();
 
