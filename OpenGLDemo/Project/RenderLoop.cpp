@@ -7,6 +7,7 @@
 #include "ShaderFactory.h"
 #include "VAOFactory.h"
 #include "CommonDataDef.h"
+#include "CheckError.h"
 
 GLFWwindow* g_globalWindow;
 
@@ -56,6 +57,12 @@ int RenderLoop::initFramework()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	//glfwWindowHint(GLFW_SAMPLES, 4); // 每个像素4个子采样点, 抗锯齿
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+#ifdef _DEBUG
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+#endif // _DEBUG
+
+
 #ifdef __MAC__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -93,6 +100,26 @@ int RenderLoop::initFramework()
 	glfwSetFramebufferSizeCallback(g_globalWindow, frameBufferSizeCallback);
 	glfwSetCursorPosCallback(g_globalWindow, onCursorPosChanged);
 	glfwSetScrollCallback(g_globalWindow, onScrollChanged);
+
+	// OpenGL 版本为4.3或以上的话我们就有一个调试上下文
+	// 目前使用3.3版本
+	int contextFlags = 0;
+	glGetIntegerv(GL_CONTEXT_FLAGS, &contextFlags);
+	/*if (contextFlags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // makes sure errors are displayed synchronously
+		glDebugMessageCallback(CheckError::glDebugOutput, nullptr);
+
+		// 过滤调试输出（设置关心的源、类型、严重性）
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+	}
+	*/
+
+	// 自定义错误输出
+	/*
+		glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0,
+		GL_DEBUG_SEVERITY_MEDIUM, -1, "error message here");
+	*/
 
 	return 0;
 }

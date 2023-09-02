@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "stb_image.h"	
+#include "CheckError.h"
 
 unsigned int TextureHelper::loadTexture(const TexParam& param)
 {
@@ -19,7 +20,7 @@ unsigned int TextureHelper::loadTexture(const TexParam& param)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param.wrapT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
-	
+
 	return textureID;
 }
 
@@ -54,6 +55,8 @@ unsigned int TextureHelper::loadTexture(char const* path, const TexParam& param)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param.wrapT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glCheckError();
 	}
 	else {
 		std::cout << "Texture failed to load at path: " << path << std::endl;

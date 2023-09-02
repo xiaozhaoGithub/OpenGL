@@ -58,6 +58,7 @@ set(Headers
     "CommonFileSrc/CameraWrapper.h"
     "CommonFileSrc/CommonDataDef.h"
     "CommonFileSrc/Singleton.h"
+    "CommonFileSrc/CheckError.h"
     "DataModel/Mesh.h"
     "DataModel/Model.h"
     "DataModel/VAOFactory.h"
@@ -77,6 +78,7 @@ set(Headers
 
 set(Sources
     "CommonFileSrc/CommonDataDef.cpp"
+    "CommonFileSrc/CheckError.cpp"
     "DataModel/Mesh.cpp"
     "DataModel/Model.cpp"
     "DataModel/VAOFactory.cpp"
@@ -147,13 +149,10 @@ PRIVATE
 ################################################################################
 # Dependencies
 ################################################################################
-set(ADDITIONAL_LIBRARY_DEPENDENCIES
-	glfw3
-	assimp-vc141-mtd
-)
 target_link_libraries(${PROJECT_NAME} 
 PRIVATE 
-	"${ADDITIONAL_LIBRARY_DEPENDENCIES}"
+	glfw3
+	assimp-vc141-mtd
 )
 
 target_link_directories(${PROJECT_NAME} 
