@@ -1326,6 +1326,27 @@ std::shared_ptr<AbstractVAO> TriangleVAOFactory::createPbrLightingVAO()
 	return std::shared_ptr<AbstractVAO>(new ElementVAO(sphereVAO, indexCount));
 }
 
+std::shared_ptr<AbstractVAO> TriangleVAOFactory::createTextVAO()
+{
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	GLuint VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// 注：绘制字符需要经常更新VBO的内存，设置内存类型为动态绘制：GL_DYNAMIC_DRAW
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO, VBO));
+}
+
 std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()
 {
 	float rectVertices[] = {
@@ -1365,4 +1386,15 @@ std::shared_ptr<AbstractVAO> RectVAOFactory::createNormalVAO()
 	glBindVertexArray(0);
 
 	return std::shared_ptr<AbstractVAO>(new TriangleVAO(VAO));
+}
+
+void TriangleVAO::fillBufSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data)
+{
+	if (m_vbo == 0)
+		return;
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

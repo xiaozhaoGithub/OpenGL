@@ -26,7 +26,9 @@ public:
 	 * @brief 每次渲染前，需绑定待渲染的纹理对象，就像绑定VAO一样
 	 */
 	virtual void bindTexture();
+	virtual void fillBufSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data) {}
 	virtual unsigned int indexCount() { return 0; }
+	virtual unsigned int vbo() { return 0; }
 
 private:
 	unsigned int m_id;
@@ -37,8 +39,15 @@ class TriangleVAO : public AbstractVAO
 {
 public:
 	TriangleVAO() {}
-	TriangleVAO(unsigned int id) : AbstractVAO(id) {}
+	TriangleVAO(unsigned int id) : TriangleVAO(id, 0) {}
+	TriangleVAO(unsigned int id, unsigned int vbo) : AbstractVAO(id), m_vbo(vbo){}
 	~TriangleVAO() {}
+
+protected:
+	void fillBufSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data) override;
+
+private:
+	unsigned int m_vbo;
 };
 
 class ElementVAO : public AbstractVAO
@@ -97,6 +106,7 @@ public:
 	virtual std::shared_ptr<AbstractVAO> createNormalMapVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createParallaxMapVAO() { return nullptr; }
 	virtual std::shared_ptr<AbstractVAO> createPbrLightingVAO() { return nullptr; }
+	virtual std::shared_ptr<AbstractVAO> createTextVAO() { return nullptr; }
 };
 
 class TriangleVAOFactory : public AbstractVAOFactory
@@ -141,6 +151,7 @@ public:
 	std::shared_ptr<AbstractVAO> createNormalMapVAO() override;
 	std::shared_ptr<AbstractVAO> createParallaxMapVAO() override;
 	std::shared_ptr<AbstractVAO> createPbrLightingVAO() override;
+	std::shared_ptr<AbstractVAO> createTextVAO() override;
 };
 
 class RectVAOFactory : public AbstractVAOFactory

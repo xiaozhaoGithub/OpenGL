@@ -69,6 +69,7 @@ set(Headers
     "ExerciceState/AdvancedExerciceState.h"
     "ExerciceState/AdvancedLightingState.h"
     "ExerciceState/PbrExerciceState.h"
+    "ExerciceState/PracticeExerciceState.h"
     "RenderLoop.h"
     "Shader/Shader.h"
     "Shader/ShaderFactory.h"
@@ -89,6 +90,7 @@ set(Sources
     "ExerciceState/AdvancedExerciceState.cpp"
     "ExerciceState/AdvancedLightingState.cpp"
     "ExerciceState/PbrExerciceState.cpp"
+    "ExerciceState/PracticeExerciceState.cpp"
     "main.cpp"
     "RenderLoop.cpp"
     "Shader/Shader.cpp"
@@ -144,6 +146,7 @@ PRIVATE
 	third_lib/stb
 	third_lib/GLAD/include
 	third_lib/GLFW/include
+	third_lib/FreeType/include
 )
 
 ################################################################################
@@ -153,12 +156,14 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE 
 	glfw3
 	assimp-vc141-mtd
+	freetyped
 )
 
 target_link_directories(${PROJECT_NAME} 
 PRIVATE
 	third_lib/GLFW/lib
 	third_lib/Assimp/lib
+	third_lib/FreeType/lib
 )
 
 ################################################################################
