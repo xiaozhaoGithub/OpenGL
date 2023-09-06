@@ -26,12 +26,26 @@ unsigned int TextureHelper::loadTexture(const TexParam& param)
 
 unsigned int TextureHelper::loadTexture(char const* path, const TexParam& param)
 {
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-
 	int width, height, nrComponents;
-	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+	void* data = nullptr;
+
+	stbi_set_flip_vertically_on_load(true);
+
+	switch (param.type) {
+	case GL_UNSIGNED_BYTE:
+		data = stbi_load(path, &width, &height, &nrComponents, 0);
+	break;
+	case GL_FLOAT:
+		data = stbi_loadf(path, &width, &height, &nrComponents, 0);
+		break;
+	default:
+		break;
+	}
+
+	unsigned int textureId = 0;
 	if (data) {
+		glGenTextures(1, &textureId);
+
 		GLenum internalformat;
 		GLenum format;
 		if (nrComponents == 1) {
@@ -47,8 +61,8 @@ unsigned int TextureHelper::loadTexture(char const* path, const TexParam& param)
 			format = GL_RGBA;
 		}
 
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glBindTexture(GL_TEXTURE_2D, textureId);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, param.type, data);
 		glGenerateMipmap(GL_TEXTURE_2D); // 在生成纹理之后调用glGenerateMipmap。这会为当前绑定的纹理自动生成所有需要的多级渐远纹理。
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param.wrapS);
@@ -56,22 +70,22 @@ unsigned int TextureHelper::loadTexture(char const* path, const TexParam& param)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+		stbi_image_free(data);
+
 		glCheckError();
 	}
 	else {
 		std::cout << "Texture failed to load at path: " << path << std::endl;
 	}
 
-	stbi_image_free(data);
-
-	return textureID;
+	return textureId;
 }
 
 unsigned int TextureHelper::loadCubemap(const std::vector<std::string>& faces, const TexParam& param)
 {
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+	unsigned int textureId;
+	glGenTextures(1, &textureId);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
 	for (unsigned int i = 0; i < faces.size(); i++) {
 		int width, height, nrComponents;
@@ -94,6 +108,12 @@ unsigned int TextureHelper::loadCubemap(const std::vector<std::string>& faces, c
 		}
 	}
 
+	if (faces.size() == 0) {
+		for (unsigned int i = 0; i < 6; i++) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, param.internalFormat3, param.width, param.height, 0, param.format, param.type, nullptr);
+		}
+	}
+
 	// 因正好处于两个面之间的纹理坐标可能不能击中一个面（由于一些硬件限制），边界产生透明线条，使用边界值环绕解决
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -101,5 +121,5 @@ unsigned int TextureHelper::loadCubemap(const std::vector<std::string>& faces, c
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	return textureID;
+	return textureId;
 }

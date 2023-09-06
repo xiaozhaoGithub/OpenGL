@@ -21,6 +21,12 @@ PracticeExerciceState::PracticeExerciceState()
 	initText();
 }
 
+PracticeExerciceState::~PracticeExerciceState()
+{
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
 void PracticeExerciceState::render()
 {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);

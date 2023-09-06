@@ -18,6 +18,7 @@ namespace TextureHelper
 		int format = GL_RGBA;
 		int width;
 		int height;
+		int type = GL_UNSIGNED_BYTE;
 		void* data;
 	};
 

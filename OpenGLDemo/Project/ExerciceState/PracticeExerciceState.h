@@ -17,7 +17,7 @@ class PracticeExerciceState : public AbstractExerciceState
 {
 public:
 	PracticeExerciceState();
-	~PracticeExerciceState(){}
+	~PracticeExerciceState();
 
 	void render() override;
 

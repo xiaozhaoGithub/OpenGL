@@ -10,6 +10,9 @@ namespace UCDD = UiCommonDataDef;
 
 PbrExerciceState::PbrExerciceState() 
 	: AbstractExerciceState()
+	, m_rows(7)
+	, m_cols(7)
+	, m_spacing(2.5f)
 {
 	m_cameraWrapper = Singleton<CameraWrapper>::instance();
 	m_shaderFactory = Singleton<ShaderFactory>::instance();
@@ -18,6 +21,19 @@ PbrExerciceState::PbrExerciceState()
 
 	initLighting();
 	initLightingTexture();
+	initIblIrradianceConversion();
+}
+
+PbrExerciceState::~PbrExerciceState()
+{
+	glDeleteTextures(1, &m_sphereAlbedoTexId);
+	glDeleteTextures(1, &m_sphereNormalTexId);
+	glDeleteTextures(1, &m_sphereMetallicTexId);
+	glDeleteTextures(1, &m_sphereRoughnessTexId);
+	glDeleteTextures(1, &m_sphereAoTexId);
+
+	glDeleteTextures(1, &m_equiRectMapTexId);
+	glDeleteTextures(1, &m_envCubemapTexId);
 }
 
 void PbrExerciceState::render()
@@ -25,6 +41,7 @@ void PbrExerciceState::render()
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 
 	m_cameraWrapper->setCursorVisible(false);
 
@@ -47,13 +64,17 @@ void PbrExerciceState::render()
 	case GLFW_KEY_1: {
 		drawPbrLighting();
 		break;
+	}
 	case GLFW_KEY_2: {
 		drawPbrLightingTexture();
 		break;
 	}
-	default:
+	case GLFW_KEY_3: {
+		drawIblIrradianceConversion();
 		break;
 	}
+	default:
+		break;
 	}
 }
 
@@ -101,11 +122,43 @@ void PbrExerciceState::initLightingTexture()
 	m_sphereAoTexId = TextureHelper::loadTexture("skin/textures/pbr/rusted_iron/ao.png");
 }
 
+void PbrExerciceState::initIblIrradianceConversion()
+{
+	m_cubeVAO = Singleton<TriangleVAOFactory>::instance()->createNormalCubeVAO();
+
+	m_equiRectToCubemapShader = m_shaderFactory->shaderProgram("equi_rect_to_cubemap", "ShaderProgram/Pbr/cubemap.vs", "ShaderProgram/Pbr/equirectangular_to_cubemap.fs");
+	m_equiRectToCubemapShader->use();
+	m_equiRectToCubemapShader->setInt("equirectangularMap", 0);
+
+	auto projectionMat = glm::perspective(glm::radians(m_cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
+
+	m_backgroundShader = m_shaderFactory->shaderProgram("pbr_background", "ShaderProgram/Pbr/background.vs", "ShaderProgram/Pbr/background.fs");
+	m_backgroundShader->use();
+	m_backgroundShader->setInt("environmentMap", 0);
+	m_backgroundShader->setMatrix("projection", projectionMat);
+
+	m_pbrLightShader->use();
+	m_pbrLightShader->setMatrix("projection", projectionMat);
+
+	drawEquiRectMapToCubemap();
+
+	// then before rendering, configure the viewport to the original framebuffer's screen dimensions
+	int scrWidth, scrHeight;
+	glfwGetFramebufferSize(g_globalWindow, &scrWidth, &scrHeight);
+	glViewport(0, 0, scrWidth, scrHeight);
+}
+
 void PbrExerciceState::drawSphere()
 {
 	m_sphereVAO->bindVAO();
 
 	glDrawElements(GL_TRIANGLE_STRIP, m_sphereVAO->indexCount(), GL_UNSIGNED_INT, 0);
+}
+
+void PbrExerciceState::drawCube()
+{
+	m_cubeVAO->bindVAO();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void PbrExerciceState::drawPbrLighting()
@@ -114,24 +167,20 @@ void PbrExerciceState::drawPbrLighting()
 	m_pbrLightShader->setVec("camPos", m_cameraWrapper->cameraPos());
 
 	// render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
-	int rows = 7;
-	int cols = 7;
-	float spacing = 2.5;
-
 	// 从下往上金属性0.0~1.0，从左往右粗糙度0.0~1.0
 	// -7.5 ~ 7.5
 	glm::mat4 model = glm::mat4(1.0f);
-	for (int row = 0; row < rows; ++row) {
-		m_pbrLightShader->setFloat("metallic", (float)row / (float)rows);
-		for (int col = 0; col < cols; ++col) {
+	for (int row = 0; row < m_rows; ++row) {
+		m_pbrLightShader->setFloat("metallic", (float)row / (float)m_rows);
+		for (int col = 0; col < m_cols; ++col) {
 			// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
 			// on direct lighting.
-			m_pbrLightShader->setFloat("roughness", glm::clamp((float)col / (float)cols, 0.05f, 1.0f));
+			m_pbrLightShader->setFloat("roughness", glm::clamp((float)col / (float)m_cols, 0.05f, 1.0f));
 
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(
-				(col - (cols / 2)) * spacing, 
-				(row - (rows / 2)) * spacing,
+				(col - (m_cols / 2)) * m_spacing,
+				(row - (m_rows / 2)) * m_spacing,
 				0.0f
 			));
 			m_pbrLightShader->setMatrix("modelMat", model);
@@ -180,18 +229,14 @@ void PbrExerciceState::drawPbrLightingTexture()
 	glBindTexture(GL_TEXTURE_2D, m_sphereAoTexId);
 
 	// render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
-	int rows = 7;
-	int cols = 7;
-	float spacing = 2.5;
-
 	// -7.5 ~ 7.5
 	glm::mat4 model = glm::mat4(1.0f);
-	for (int row = 0; row < rows; ++row) {
-		for (int col = 0; col < cols; ++col) {
+	for (int row = 0; row < m_rows; ++row) {
+		for (int col = 0; col < m_cols; ++col) {
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(
-				(col - (cols / 2)) * spacing,
-				(row - (rows / 2)) * spacing,
+				(col - (m_cols / 2)) * m_spacing,
+				(row - (m_rows / 2)) * m_spacing,
 				0.0f
 			));
 			m_pbrLightTexShader->setMatrix("modelMat", model);
@@ -217,4 +262,65 @@ void PbrExerciceState::drawPbrLightingTexture()
 		m_pbrLightTexShader->setMatrix("normalMat", glm::transpose(glm::inverse(glm::mat3(model))));
 		drawSphere();
 	}
+}
+
+void PbrExerciceState::drawIblIrradianceConversion()
+{
+	drawPbrLighting();
+
+	// render skybox (render as last to prevent overdraw)
+	m_backgroundShader->use();
+	m_backgroundShader->setMatrix("view", m_cameraWrapper->lookAtMatrix());
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_envCubemapTexId);
+	drawCube();
+}
+
+void PbrExerciceState::drawEquiRectMapToCubemap()
+{
+	m_captureFb = FramebufferFactory::createFramebuffer();
+
+	// pbr: load the HDR environment map
+	TextureHelper::TexParam texParam;
+	texParam.internalFormat3 = GL_RGB16F;
+	texParam.format = GL_RGB;
+	texParam.type = GL_FLOAT;
+	m_equiRectMapTexId = TextureHelper::loadTexture("skin/textures/hdr/newport_loft.hdr", texParam);
+
+	texParam.width = 512;
+	texParam.height = 512;
+	texParam.internalFormat3 = GL_RGB16F;
+	texParam.format = GL_RGB;
+	texParam.type = GL_FLOAT;
+	m_envCubemapTexId = TextureHelper::loadCubemap(std::vector<std::string>(), texParam);
+
+	// pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
+	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+	glm::mat4 captureViews[6] =
+	{
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+	};
+
+	// pbr: convert HDR equirectangular environment map to cubemap equivalent
+	m_equiRectToCubemapShader->use();
+	m_equiRectToCubemapShader->setMatrix("projection", captureProjection);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_equiRectMapTexId);
+
+	glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+	m_captureFb->bindFramebuffer();
+	for (unsigned int i = 0; i < 6; ++i) {
+		m_equiRectToCubemapShader->setMatrix("view", captureViews[i]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_envCubemapTexId, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		drawCube();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
