@@ -13,8 +13,8 @@
 class Framebuffer
 {
 public:
-	Framebuffer(unsigned int id, unsigned int texId) : m_id(id) { m_texIds.emplace_back(texId); }
-	Framebuffer(unsigned int id, const std::vector<unsigned int>& texIds) : m_id(id) { m_texIds = texIds; }
+	Framebuffer(unsigned int id, unsigned int texId, unsigned int rbo);
+	Framebuffer(unsigned int id, const std::vector<unsigned int>& texIds, unsigned int rbo);
 	~Framebuffer();
 
 	unsigned int id() { return m_id; }
@@ -27,18 +27,20 @@ public:
 	void bindTexture(unsigned int activeTex);
 	void bindTexture(unsigned int type, unsigned int activeTex);
 	void bindTexture(unsigned int type, unsigned int activeTex, unsigned int index);
+	void renderbufferStorage(unsigned int target, unsigned int internalformat, int width, int height);
 
 	void blitFramebuffer(unsigned int targetFbo, unsigned int mask = GL_COLOR_BUFFER_BIT);
 
 protected:
 	unsigned int m_id;
+	unsigned int m_rbo;
 	std::vector<unsigned int> m_texIds;
 };
 
 class MuiltSampleFramebuffer : public Framebuffer
 {
 public:
-	MuiltSampleFramebuffer(unsigned int id, unsigned int texId) : Framebuffer(id, texId) {}
+	MuiltSampleFramebuffer(unsigned int id, unsigned int texId, unsigned int rbo) : Framebuffer(id, texId, rbo) {}
 };
 
 // Simple factory

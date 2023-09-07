@@ -5,6 +5,19 @@
 
 namespace UCDD = UiCommonDataDef;
 
+Framebuffer::Framebuffer(unsigned int id, unsigned int texId, unsigned int rbo)
+	: Framebuffer(id, std::vector<unsigned int>(), rbo)
+{
+	m_texIds.emplace_back(texId);
+}
+
+Framebuffer::Framebuffer(unsigned int id, const std::vector<unsigned int>& texIds, unsigned int rbo)
+	: m_id(id)
+	, m_texIds(texIds)
+	, m_rbo(rbo)
+{
+}
+
 Framebuffer::~Framebuffer()
 {
 	glDeleteFramebuffers(1, &m_id);
@@ -34,6 +47,12 @@ void Framebuffer::bindTexture(unsigned int type, unsigned int activeTex, unsigne
 {
 	glActiveTexture(activeTex);
 	glBindTexture(type, m_texIds[index]);
+}
+
+void Framebuffer::renderbufferStorage(unsigned int target, unsigned int internalformat, int width, int height)
+{
+	glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+	glRenderbufferStorage(target, internalformat, width, height);
 }
 
 void Framebuffer::blitFramebuffer(unsigned int targetFbo, unsigned int mask)
@@ -93,7 +112,7 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 	// 解绑，激活默认帧缓冲渲染，保证我们不会不小心渲染到错误的帧缓冲上
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	return std::make_shared<Framebuffer>(fbo, textureColorbuffer);
+	return std::make_shared<Framebuffer>(fbo, textureColorbuffer, rbo);
 }
 
 std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const FramebufferParam& param, int attachNum)
@@ -150,7 +169,7 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 	// 解绑，激活默认帧缓冲渲染，保证我们不会不小心渲染到错误的帧缓冲上
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	return std::make_shared<Framebuffer>(fbo, texIds);
+	return std::make_shared<Framebuffer>(fbo, texIds, rbo);
 }
 
 std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(int samples)
@@ -198,7 +217,7 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(int samples)
 	// 解绑，激活默认帧缓冲渲染，保证我们不会不小心渲染到错误的帧缓冲上
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	return std::make_shared<MuiltSampleFramebuffer>(fbo, colorbufferTexId);
+	return std::make_shared<MuiltSampleFramebuffer>(fbo, colorbufferTexId, rbo);
 }
 
 std::shared_ptr<Framebuffer> FramebufferFactory::createDepthFb()
@@ -239,7 +258,7 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createDepthFb()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	return std::make_shared<Framebuffer>(fbo, texturId);
+	return std::make_shared<Framebuffer>(fbo, texturId, 0);
 }
 
 std::shared_ptr<Framebuffer> FramebufferFactory::createCubeMapDepthFb()
@@ -282,6 +301,6 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createCubeMapDepthFb()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	return std::make_shared<Framebuffer>(fbo, texturId);
+	return std::make_shared<Framebuffer>(fbo, texturId, 0);
 }
 

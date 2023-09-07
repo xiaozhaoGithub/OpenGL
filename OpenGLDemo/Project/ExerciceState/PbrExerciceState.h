@@ -23,13 +23,17 @@ private:
 	//void drawQuad();
 	void drawSphere();
 	void drawCube();
+	void drawSkybox();
 
 	// business painter
-	void drawPbrLighting();
+	void drawPbrLighting(std::shared_ptr<AbstractShader> shader);
 	void drawPbrLightingTexture();
 
 	void drawIblIrradianceConversion();
 	void drawEquiRectMapToCubemap();
+	void drawIblIrradianceMap();
+
+	void drawPbrLightingConvolution();
 
 private:
 	std::shared_ptr<CameraWrapper> m_cameraWrapper;
@@ -51,11 +55,16 @@ private:
 	unsigned int m_sphereRoughnessTexId;
 	unsigned int m_sphereAoTexId;
 
+	glm::mat4 m_captureProjection;
+	std::vector<glm::mat4> m_captureViews;
 	std::shared_ptr<AbstractShader> m_equiRectToCubemapShader;
+	std::shared_ptr<AbstractShader> m_irradianceConvolutionShader;
 	std::shared_ptr<AbstractShader> m_backgroundShader;
+	std::shared_ptr<AbstractShader> m_pbrLightConvolutionShader;
 	std::shared_ptr<Framebuffer> m_captureFb;
 	unsigned int m_equiRectMapTexId;
 	unsigned int m_envCubemapTexId;
+	unsigned int m_irradianceMapTexId;
 	std::shared_ptr<AbstractVAO> m_cubeVAO;
 };	
 

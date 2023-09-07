@@ -34,6 +34,7 @@ PbrExerciceState::~PbrExerciceState()
 
 	glDeleteTextures(1, &m_equiRectMapTexId);
 	glDeleteTextures(1, &m_envCubemapTexId);
+	glDeleteTextures(1, &m_irradianceMapTexId);
 }
 
 void PbrExerciceState::render()
@@ -62,7 +63,7 @@ void PbrExerciceState::render()
 
 	switch (m_stateKey) {
 	case GLFW_KEY_1: {
-		drawPbrLighting();
+		drawPbrLighting(m_pbrLightShader);
 		break;
 	}
 	case GLFW_KEY_2: {
@@ -71,6 +72,10 @@ void PbrExerciceState::render()
 	}
 	case GLFW_KEY_3: {
 		drawIblIrradianceConversion();
+		break;
+	}
+	case GLFW_KEY_4: {
+		drawPbrLightingConvolution();
 		break;
 	}
 	default:
@@ -128,19 +133,28 @@ void PbrExerciceState::initIblIrradianceConversion()
 
 	m_equiRectToCubemapShader = m_shaderFactory->shaderProgram("equi_rect_to_cubemap", "ShaderProgram/Pbr/cubemap.vs", "ShaderProgram/Pbr/equirectangular_to_cubemap.fs");
 	m_equiRectToCubemapShader->use();
-	m_equiRectToCubemapShader->setInt("equirectangularMap", 0);
-
+	m_equiRectToCubemapShader->setInt("equirectangularMap", 0);	
+	
 	auto projectionMat = glm::perspective(glm::radians(m_cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
+
+	m_irradianceConvolutionShader = m_shaderFactory->shaderProgram("irradiance_convolution_shader", "ShaderProgram/Pbr/cubemap.vs", "ShaderProgram/Pbr/irradiance_convolution.fs");
+	m_irradianceConvolutionShader->use();
+	m_irradianceConvolutionShader->setInt("environmentMap", 0);
 
 	m_backgroundShader = m_shaderFactory->shaderProgram("pbr_background", "ShaderProgram/Pbr/background.vs", "ShaderProgram/Pbr/background.fs");
 	m_backgroundShader->use();
 	m_backgroundShader->setInt("environmentMap", 0);
 	m_backgroundShader->setMatrix("projection", projectionMat);
 
-	m_pbrLightShader->use();
-	m_pbrLightShader->setMatrix("projection", projectionMat);
+	m_pbrLightConvolutionShader = m_shaderFactory->shaderProgram("pbr_light_conbolution", "ShaderProgram/Pbr/pbr_light.vs", "ShaderProgram/Pbr/pbr_light irraiance.fs");
+	m_pbrLightConvolutionShader->use();
+	m_pbrLightConvolutionShader->setBool("reverseNormals", false);
+	m_pbrLightConvolutionShader->setVec("albedo", 0.5f, 0.0f, 0.0f);
+	m_pbrLightConvolutionShader->setFloat("ao", 1.0f);
+	m_pbrLightConvolutionShader->setMatrix("projection", projectionMat);
 
 	drawEquiRectMapToCubemap();
+	drawIblIrradianceMap();
 
 	// then before rendering, configure the viewport to the original framebuffer's screen dimensions
 	int scrWidth, scrHeight;
@@ -161,21 +175,39 @@ void PbrExerciceState::drawCube()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void PbrExerciceState::drawPbrLighting()
+void PbrExerciceState::drawSkybox()
 {
-	m_pbrLightShader->use();
-	m_pbrLightShader->setVec("camPos", m_cameraWrapper->cameraPos());
+	// render skybox (render as last to prevent overdraw)
+	m_backgroundShader->use();
+	m_backgroundShader->setMatrix("view", m_cameraWrapper->lookAtMatrix());
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_envCubemapTexId);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceMapTexId);
+	drawCube();
+}
+
+void PbrExerciceState::drawPbrLighting(std::shared_ptr<AbstractShader> shader)
+{
+	shader->use();
+	shader->setVec("camPos", m_cameraWrapper->cameraPos());
+
+	// bind pre-computed IBL data
+	if (shader == m_pbrLightConvolutionShader) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceMapTexId);
+	}
 
 	// render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
 	// 从下往上金属性0.0~1.0，从左往右粗糙度0.0~1.0
 	// -7.5 ~ 7.5
 	glm::mat4 model = glm::mat4(1.0f);
 	for (int row = 0; row < m_rows; ++row) {
-		m_pbrLightShader->setFloat("metallic", (float)row / (float)m_rows);
+		shader->setFloat("metallic", (float)row / (float)m_rows);
 		for (int col = 0; col < m_cols; ++col) {
 			// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
 			// on direct lighting.
-			m_pbrLightShader->setFloat("roughness", glm::clamp((float)col / (float)m_cols, 0.05f, 1.0f));
+			shader->setFloat("roughness", glm::clamp((float)col / (float)m_cols, 0.05f, 1.0f));
 
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(
@@ -183,8 +215,8 @@ void PbrExerciceState::drawPbrLighting()
 				(row - (m_rows / 2)) * m_spacing,
 				0.0f
 			));
-			m_pbrLightShader->setMatrix("modelMat", model);
-			m_pbrLightShader->setMatrix("normalMat", glm::transpose(glm::inverse(glm::mat3(model))));
+			shader->setMatrix("modelMat", model);
+			shader->setMatrix("normalMat", glm::transpose(glm::inverse(glm::mat3(model))));
 			drawSphere();
 		}
 	}
@@ -196,14 +228,14 @@ void PbrExerciceState::drawPbrLighting()
 	for (unsigned int i = 0; i < count; ++i) {
 		glm::vec3 newPos = m_lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);// + -25~25
 		newPos = m_lightPositions[i];
-		m_pbrLightShader->setVec("lightPositions[" + std::to_string(i) + "]", newPos);
-		m_pbrLightShader->setVec("lightColors[" + std::to_string(i) + "]", m_lightColors[i]);
+		shader->setVec("lightPositions[" + std::to_string(i) + "]", newPos);
+		shader->setVec("lightColors[" + std::to_string(i) + "]", m_lightColors[i]);
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, newPos);
 		model = glm::scale(model, glm::vec3(0.5f));
-		m_pbrLightShader->setMatrix("modelMat", model);
-		m_pbrLightShader->setMatrix("normalMat", glm::transpose(glm::inverse(glm::mat3(model))));
+		shader->setMatrix("modelMat", model);
+		shader->setMatrix("normalMat", glm::transpose(glm::inverse(glm::mat3(model))));
 		drawSphere();
 	}
 }
@@ -266,15 +298,8 @@ void PbrExerciceState::drawPbrLightingTexture()
 
 void PbrExerciceState::drawIblIrradianceConversion()
 {
-	drawPbrLighting();
-
-	// render skybox (render as last to prevent overdraw)
-	m_backgroundShader->use();
-	m_backgroundShader->setMatrix("view", m_cameraWrapper->lookAtMatrix());
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_envCubemapTexId);
-	drawCube();
+	drawPbrLighting(m_pbrLightShader);
+	drawSkybox();
 }
 
 void PbrExerciceState::drawEquiRectMapToCubemap()
@@ -296,8 +321,8 @@ void PbrExerciceState::drawEquiRectMapToCubemap()
 	m_envCubemapTexId = TextureHelper::loadCubemap(std::vector<std::string>(), texParam);
 
 	// pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
-	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-	glm::mat4 captureViews[6] =
+	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+	m_captureViews =
 	{
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
@@ -309,14 +334,14 @@ void PbrExerciceState::drawEquiRectMapToCubemap()
 
 	// pbr: convert HDR equirectangular environment map to cubemap equivalent
 	m_equiRectToCubemapShader->use();
-	m_equiRectToCubemapShader->setMatrix("projection", captureProjection);
+	m_equiRectToCubemapShader->setMatrix("projection", m_captureProjection);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_equiRectMapTexId);
 
 	glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
 	m_captureFb->bindFramebuffer();
 	for (unsigned int i = 0; i < 6; ++i) {
-		m_equiRectToCubemapShader->setMatrix("view", captureViews[i]);
+		m_equiRectToCubemapShader->setMatrix("view", m_captureViews[i]);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_envCubemapTexId, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -324,3 +349,44 @@ void PbrExerciceState::drawEquiRectMapToCubemap()
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+void PbrExerciceState::drawIblIrradianceMap()
+{
+	// 由于辐照度图对所有周围的辐射值取了平均值，因此它丢失了大部分高频细节，所以我们可以以较低的分辨率（32x32）存储，
+	// 并让 OpenGL 的线性滤波完成大部分工作
+	// pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
+	// pbr: load the HDR environment map
+	TextureHelper::TexParam texParam;
+	texParam.internalFormat3 = GL_RGB16F;
+	texParam.format = GL_RGB;
+	texParam.type = GL_FLOAT;
+	texParam.width = 32;
+	texParam.height = 32;
+	m_irradianceMapTexId = TextureHelper::loadCubemap(std::vector<std::string>(), texParam);
+	m_captureFb->bindFramebuffer();
+	m_captureFb->renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 32, 32);
+
+	// pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+	m_irradianceConvolutionShader->use();
+	m_irradianceConvolutionShader->setMatrix("projection", m_captureProjection);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_envCubemapTexId);
+
+	glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
+	m_captureFb->bindFramebuffer();
+	for (unsigned int i = 0; i < 6; ++i) {
+		m_irradianceConvolutionShader->setMatrix("view", m_captureViews[i]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_irradianceMapTexId, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		drawCube();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void PbrExerciceState::drawPbrLightingConvolution()
+{
+	drawPbrLighting(m_pbrLightConvolutionShader);
+	drawSkybox();
+}
+
