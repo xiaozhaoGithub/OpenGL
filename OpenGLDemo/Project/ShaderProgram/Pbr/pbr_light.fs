@@ -19,6 +19,12 @@ uniform vec3 lightColors[4];
 
 uniform vec3 camPos;
 
+// IBL
+uniform bool isIblSpecular;
+uniform samplerCube irradianceMap;
+uniform samplerCube prefilterMap;
+uniform sampler2D brdfLUT;
+
 const float PI = 3.14159265359;
 
 /**
@@ -92,11 +98,44 @@ vec3 FresnelSchlick(float cosTheta, vec3 f0)
     return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0 , 1.0) , 5.0);
 }
 
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 f0, float roughness)
+{
+    vec3 value = max(vec3(1.0 - roughness), f0);
+    return f0 + (value - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+} 
+
+vec3 calcAmbient(vec3 viewDir, vec3 normal, vec3 f0)
+{
+    // ambient lighting (we now use IBL as the ambient term)
+    vec3 F = FresnelSchlickRoughness(max(dot(normal, viewDir), 0.0), f0, roughness);
+
+    vec3 kS = F;
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;	  
+
+    vec3 irradiance = texture(irradianceMap, normal).rgb;
+    vec3 diffuse      = irradiance * albedo;
+
+    // sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 reflectDir = reflect(-viewDir, normal);
+
+    vec3 prefilteredColor = textureLod(prefilterMap, reflectDir,  roughness * MAX_REFLECTION_LOD).rgb;    
+    // 根据表面粗糙度在合适的 mip 级别采样，以使更粗糙的表面产生更模糊的镜面反射
+    // brdfLUT存储F的系数和偏移
+    vec2 brdf  = texture(brdfLUT, vec2(max(dot(normal, viewDir), 0.0), roughness)).rg;
+    vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+    return (kD * diffuse + specular) * ao;
+}
+
 void main()
 {
     vec3 normal = normalize(fsIn.normal);
     vec3 viewDir = normalize(camPos - fsIn.fragPos);
 
+    // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
+    // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)    
     vec3 f0 = vec3(0.04);
     f0 = mix(f0, albedo, metallic);// metallic workflow
 
@@ -142,8 +181,7 @@ void main()
     
     // ambient lighting (note that the next IBL tutorial will replace 
     // this ambient lighting with environment lighting).
-    vec3 ambient = vec3(0.03) * albedo * ao;
-
+    vec3 ambient = isIblSpecular ? calcAmbient(viewDir, normal, f0) : (vec3(0.03) * albedo * ao);
     vec3 color = ambient + Lo;
 
     // HDR tonemapping

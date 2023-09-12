@@ -13,5 +13,5 @@ void main()
 	mat4 rotView = mat4(mat3(view));
 	vec4 clipPos = projection * rotView * vec4(WorldPos, 1.0);
 
-	gl_Position = clipPos.xyww; //  xyww 可以确保渲染的立方体片段的深度值总是 1.0，即最大深度
+	gl_Position = clipPos.xyww; //  xyww 可以确保渲染的立方体片段的深度值总是 1.0(z == w)，即最大深度
 }

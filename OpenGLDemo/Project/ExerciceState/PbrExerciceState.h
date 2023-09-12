@@ -18,12 +18,14 @@ private:
 	void initLighting();
 	void initLightingTexture();
 	void initIblIrradianceConversion();
+	void initIblSpecular();
 
 	// common painter
 	//void drawQuad();
 	void drawSphere();
 	void drawCube();
 	void drawSkybox();
+	void drawQuad();
 
 	// business painter
 	void drawPbrLighting(std::shared_ptr<AbstractShader> shader);
@@ -32,8 +34,11 @@ private:
 	void drawIblIrradianceConversion();
 	void drawEquiRectMapToCubemap();
 	void drawIblIrradianceMap();
+	void drawPreFilterMap();
+	void draw2DLutTexture();
 
 	void drawPbrLightingConvolution();
+	void drawIblSpecular();
 
 private:
 	std::shared_ptr<CameraWrapper> m_cameraWrapper;
@@ -66,6 +71,13 @@ private:
 	unsigned int m_envCubemapTexId;
 	unsigned int m_irradianceMapTexId;
 	std::shared_ptr<AbstractVAO> m_cubeVAO;
+
+	std::shared_ptr<AbstractVAO> m_quadVAO;
+	std::shared_ptr<AbstractShader> m_iblLightShader;
+	std::shared_ptr<AbstractShader> m_prefilterShader;
+	std::shared_ptr<AbstractShader> m_brdfShader;
+	unsigned int m_prefilterMapTexId;
+	unsigned int m_brdfLutTexId;
 };	
 
 #endif

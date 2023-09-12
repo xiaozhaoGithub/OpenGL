@@ -19,7 +19,9 @@ namespace TextureHelper
 		int width;
 		int height;
 		int type = GL_UNSIGNED_BYTE;
-		void* data;
+		int minFilter = GL_LINEAR;
+		int maxFilter = GL_LINEAR;
+		void* data = nullptr;
 	};
 
 	// utility function for loading a 2D texture from file

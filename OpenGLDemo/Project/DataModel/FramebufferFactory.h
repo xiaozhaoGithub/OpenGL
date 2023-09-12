@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "glad/glad.h"
+#include "CommonDataDef.h"
 
 /**
  * @brief Ö¡»º³å
@@ -28,6 +29,7 @@ public:
 	void bindTexture(unsigned int type, unsigned int activeTex);
 	void bindTexture(unsigned int type, unsigned int activeTex, unsigned int index);
 	void renderbufferStorage(unsigned int target, unsigned int internalformat, int width, int height);
+	void framebufferTexture2D(unsigned int target, unsigned int attachment, unsigned int textarget, unsigned int texture, int level);
 
 	void blitFramebuffer(unsigned int targetFbo, unsigned int mask = GL_COLOR_BUFFER_BIT);
 
@@ -50,6 +52,8 @@ public:
 	struct FramebufferParam {
 		int internalFormat = GL_RGB;
 		int format = GL_RGB;
+		int width = UiCommonDataDef::kViewportWidth;
+		int height = UiCommonDataDef::kViewportHeight;
 	};
 	FramebufferFactory() {}
 	

@@ -1,7 +1,6 @@
 #include "FramebufferFactory.h"
 
 #include "glad/glad.h"
-#include "CommonDataDef.h"
 
 namespace UCDD = UiCommonDataDef;
 
@@ -55,6 +54,11 @@ void Framebuffer::renderbufferStorage(unsigned int target, unsigned int internal
 	glRenderbufferStorage(target, internalformat, width, height);
 }
 
+void Framebuffer::framebufferTexture2D(unsigned int target, unsigned int attachment, unsigned int textarget, unsigned int texture, int level)
+{
+	glFramebufferTexture2D(target, attachment, textarget, texture, level);
+}
+
 void Framebuffer::blitFramebuffer(unsigned int targetFbo, unsigned int mask)
 {
 	// 类型后缀：_FRAMEBUFFER
@@ -82,7 +86,7 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 
 	// 将维度设置为了屏幕大小（尽管这不是必须的）
 	// 空的纹理，提供给帧缓冲渲染时，再填入颜色缓冲数据
-	glTexImage2D(GL_TEXTURE_2D, 0, param.internalFormat, UCDD::kViewportWidth, UCDD::kViewportHeight, 0, param.format, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, param.internalFormat, param.width, param.height, 0, param.format, GL_UNSIGNED_BYTE, NULL);
 	// 环绕方式默认是GL_REPEAT，取到的是屏幕另一边的像素，而另一边的像素本不应该对中心像素产生影响，这可能会在屏幕边缘产生很奇怪的条纹
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -101,7 +105,7 @@ std::shared_ptr<Framebuffer> FramebufferFactory::createFramebuffer(const Framebu
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, UCDD::kViewportWidth, UCDD::kViewportHeight);// 创建深度和模板渲染缓冲对象
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, param.width, param.height);// 创建深度和模板渲染缓冲对象
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 	//glBindRenderbuffer(GL_RENDERBUFFER, 0); // 分配内存后，可解绑渲染缓冲
 

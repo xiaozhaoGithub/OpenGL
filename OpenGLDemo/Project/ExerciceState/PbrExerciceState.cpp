@@ -22,6 +22,12 @@ PbrExerciceState::PbrExerciceState()
 	initLighting();
 	initLightingTexture();
 	initIblIrradianceConversion();
+	initIblSpecular();
+
+	// then before rendering, configure the viewport to the original framebuffer's screen dimensions
+	int scrWidth, scrHeight;
+	glfwGetFramebufferSize(g_globalWindow, &scrWidth, &scrHeight);
+	glViewport(0, 0, scrWidth, scrHeight);
 }
 
 PbrExerciceState::~PbrExerciceState()
@@ -35,6 +41,9 @@ PbrExerciceState::~PbrExerciceState()
 	glDeleteTextures(1, &m_equiRectMapTexId);
 	glDeleteTextures(1, &m_envCubemapTexId);
 	glDeleteTextures(1, &m_irradianceMapTexId);
+
+	glDeleteTextures(1, &m_prefilterMapTexId);
+	glDeleteTextures(1, &m_brdfLutTexId);
 }
 
 void PbrExerciceState::render()
@@ -78,6 +87,10 @@ void PbrExerciceState::render()
 		drawPbrLightingConvolution();
 		break;
 	}
+	case GLFW_KEY_5: {
+		drawIblSpecular();
+		break;
+	}
 	default:
 		break;
 	}
@@ -90,6 +103,7 @@ void PbrExerciceState::initLighting()
 	m_pbrLightShader = m_shaderFactory->shaderProgram("pbr_light", "ShaderProgram/Pbr/pbr_light.vs", "ShaderProgram/Pbr/pbr_light.fs");
 	m_pbrLightShader->use();
 	m_pbrLightShader->setBool("reverseNormals", false);
+	m_pbrLightShader->setBool("isIblSpecular", false);
 	m_pbrLightShader->setVec("albedo", 0.5f, 0.0f, 0.0f);
 	m_pbrLightShader->setFloat("ao", 1.0f);
 
@@ -113,6 +127,7 @@ void PbrExerciceState::initLightingTexture()
 	m_pbrLightTexShader = m_shaderFactory->shaderProgram("pbr_light_tex", "ShaderProgram/Pbr/pbr_light.vs", "ShaderProgram/Pbr/pbr_texture_light.fs");
 	m_pbrLightTexShader->use();
 	m_pbrLightTexShader->setBool("reverseNormals", false);
+	m_pbrLightTexShader->setBool("isIblSpecular", false);
 
 	m_pbrLightTexShader->setInt("albedoMap", 0);
 	m_pbrLightTexShader->setInt("normalMap", 1);
@@ -149,17 +164,47 @@ void PbrExerciceState::initIblIrradianceConversion()
 	m_pbrLightConvolutionShader = m_shaderFactory->shaderProgram("pbr_light_conbolution", "ShaderProgram/Pbr/pbr_light.vs", "ShaderProgram/Pbr/pbr_light irraiance.fs");
 	m_pbrLightConvolutionShader->use();
 	m_pbrLightConvolutionShader->setBool("reverseNormals", false);
+	m_pbrLightConvolutionShader->setBool("isIblSpecular", false);
 	m_pbrLightConvolutionShader->setVec("albedo", 0.5f, 0.0f, 0.0f);
 	m_pbrLightConvolutionShader->setFloat("ao", 1.0f);
 	m_pbrLightConvolutionShader->setMatrix("projection", projectionMat);
 
 	drawEquiRectMapToCubemap();
 	drawIblIrradianceMap();
+}
 
-	// then before rendering, configure the viewport to the original framebuffer's screen dimensions
-	int scrWidth, scrHeight;
-	glfwGetFramebufferSize(g_globalWindow, &scrWidth, &scrHeight);
-	glViewport(0, 0, scrWidth, scrHeight);
+void PbrExerciceState::initIblSpecular()
+{
+	// configure global opengl state
+	glEnable(GL_DEPTH_TEST);
+	// set depth function to less than AND equal for skybox depth trick.
+	glDepthFunc(GL_LEQUAL);
+	// enable seamless cubemap sampling for lower mip levels in the pre-filter map.
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	m_iblLightShader = m_shaderFactory->shaderProgram("pbr_ibl_light", "ShaderProgram/Pbr/pbr_light.vs", "ShaderProgram/Pbr/pbr_light.fs");
+	m_iblLightShader->use();
+	m_iblLightShader->setBool("reverseNormals", false);
+	m_iblLightShader->setBool("isIblSpecular", true);
+	m_iblLightShader->setInt("irradianceMap", 0);
+	m_iblLightShader->setInt("prefilterMap", 1);
+	m_iblLightShader->setInt("brdfLUT", 2);
+	m_iblLightShader->setVec("albedo", 0.5f, 0.0f, 0.0f);
+	m_iblLightShader->setFloat("ao", 1.0f);
+
+	auto projectionMat = glm::perspective(glm::radians(m_cameraWrapper->fieldOfView()), float(UCDD::kViewportWidth) / UCDD::kViewportHeight, 0.1f, 100.0f);
+
+	m_prefilterShader = m_shaderFactory->shaderProgram("prefilter", "ShaderProgram/Pbr/cubemap.vs", "ShaderProgram/Pbr/IBL/prefilter.fs");
+	m_prefilterShader->use();
+	m_prefilterShader->setInt("environmentMap", 0);
+	m_prefilterShader->setMatrix("projection", projectionMat);
+
+	m_brdfShader = m_shaderFactory->shaderProgram("brdf", "ShaderProgram/Pbr/cubemap.vs", "ShaderProgram/Pbr/IBL/prefilter.fs");
+
+	m_quadVAO = Singleton<TriangleVAOFactory>::instance()->createQuadVAO();
+
+	drawPreFilterMap();
+	draw2DLutTexture();
 }
 
 void PbrExerciceState::drawSphere()
@@ -184,7 +229,15 @@ void PbrExerciceState::drawSkybox()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_envCubemapTexId);
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceMapTexId);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, m_prefilterMapTexId); // display prefilter map
 	drawCube();
+}
+
+void PbrExerciceState::drawQuad()
+{
+	m_quadVAO->bindVAO();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+	glBindVertexArray(0);
 }
 
 void PbrExerciceState::drawPbrLighting(std::shared_ptr<AbstractShader> shader)
@@ -196,6 +249,15 @@ void PbrExerciceState::drawPbrLighting(std::shared_ptr<AbstractShader> shader)
 	if (shader == m_pbrLightConvolutionShader) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceMapTexId);
+	}
+	else if (shader == m_iblLightShader) {
+		// bind pre-computed IBL data
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceMapTexId);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_prefilterMapTexId);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_brdfLutTexId);
 	}
 
 	// render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
@@ -304,7 +366,10 @@ void PbrExerciceState::drawIblIrradianceConversion()
 
 void PbrExerciceState::drawEquiRectMapToCubemap()
 {
-	m_captureFb = FramebufferFactory::createFramebuffer();
+	FramebufferFactory::FramebufferParam fbParam;
+	fbParam.width = 512;
+	fbParam.height = 512;
+	m_captureFb = FramebufferFactory::createFramebuffer(fbParam);
 
 	// pbr: load the HDR environment map
 	TextureHelper::TexParam texParam;
@@ -318,7 +383,9 @@ void PbrExerciceState::drawEquiRectMapToCubemap()
 	texParam.internalFormat3 = GL_RGB16F;
 	texParam.format = GL_RGB;
 	texParam.type = GL_FLOAT;
+	texParam.minFilter = GL_LINEAR_MIPMAP_LINEAR; // enable pre-filter mipmap sampling (combatting visible dots artifact)
 	m_envCubemapTexId = TextureHelper::loadCubemap(std::vector<std::string>(), texParam);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP); // 在生成纹理之后调用glGenerateMipmap。这会为当前绑定的纹理自动生成所有需要的多级渐远纹理。
 
 	// pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
 	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -348,6 +415,11 @@ void PbrExerciceState::drawEquiRectMapToCubemap()
 		drawCube();
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	// then let OpenGL generate mipmaps from first mip face (combatting visible dots artifact)
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_envCubemapTexId);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
 void PbrExerciceState::drawIblIrradianceMap()
@@ -384,9 +456,84 @@ void PbrExerciceState::drawIblIrradianceMap()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void PbrExerciceState::drawPreFilterMap()
+{
+	TextureHelper::TexParam texParam;
+	texParam.wrapS = GL_CLAMP_TO_EDGE;
+	texParam.wrapT = GL_CLAMP_TO_EDGE;
+	texParam.internalFormat3 = GL_RGB16F;
+	texParam.format = GL_RGB;
+	texParam.type = GL_FLOAT;
+	texParam.width = 128;
+	texParam.height = 128;
+	texParam.minFilter = GL_LINEAR_MIPMAP_LINEAR;
+	m_prefilterMapTexId = TextureHelper::loadCubemap(std::vector<std::string>(), texParam);
+	// generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+	// pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_envCubemapTexId);
+
+	m_captureFb->bindFramebuffer();
+	unsigned int maxMipLevels = 5;
+	for (unsigned int mip = 0; mip < maxMipLevels; ++mip) {
+		// reisze framebuffer according to mip-level size.
+		unsigned int mipWidth = static_cast<unsigned int>(128 * std::pow(0.5, mip));
+		unsigned int mipHeight = static_cast<unsigned int>(128 * std::pow(0.5, mip));
+
+		m_captureFb->renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, mipWidth, mipHeight);
+		glViewport(0, 0, mipWidth, mipHeight);
+
+		float roughness = (float)mip / (float)(maxMipLevels - 1);
+		m_prefilterShader->setFloat("roughness", roughness);
+		for (unsigned int i = 0; i < 6; ++i) {
+			m_prefilterShader->setMatrix("view", m_captureViews[i]);
+			m_captureFb->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_prefilterMapTexId, mip);
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			drawCube();
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void PbrExerciceState::draw2DLutTexture()
+{
+	// pbr: generate a 2D LUT from the BRDF equations used.
+	TextureHelper::TexParam texParam;
+	texParam.wrapS = GL_CLAMP_TO_EDGE;
+	texParam.wrapT = GL_CLAMP_TO_EDGE;
+	texParam.internalFormat3 = GL_RG16F;
+	texParam.format = GL_RG;
+	texParam.type = GL_FLOAT;
+	texParam.width = 512;
+	texParam.height = 512;
+	m_brdfLutTexId = TextureHelper::loadTexture(texParam);
+
+	// then re-configure capture framebuffer object and render screen-space quad with BRDF shader.
+	m_captureFb->bindFramebuffer();
+	m_captureFb->renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 512, 512);
+	m_captureFb->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_brdfLutTexId, 0);
+
+	glViewport(0, 0, 512, 512);
+
+	m_brdfShader->use();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	drawQuad();
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void PbrExerciceState::drawPbrLightingConvolution()
 {
 	drawPbrLighting(m_pbrLightConvolutionShader);
+	drawSkybox();
+}
+
+void PbrExerciceState::drawIblSpecular()
+{
+	drawPbrLighting(m_iblLightShader);
 	drawSkybox();
 }
 
